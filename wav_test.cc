@@ -4,8 +4,8 @@
 int main()
 {
     // Initialize a WavData object.
-    WavData song;
-    song.loadData("data/sample1.wav");
+    WavData song(/* verbose */ true);
+    song.loadData("data/sample17sec.wav");
 
     cout << "\n\nAfter loading, testing:" << endl;
     cout << "Num of channels is: " << song.numChannels << endl;

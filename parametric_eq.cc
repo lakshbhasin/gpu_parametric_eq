@@ -348,16 +348,23 @@ void usage(const char *progName)
 void interleaveCallback(cudaStream_t stream, cudaError_t status,
                         void *userData)
 {
-#ifndef NDEBUG
-    boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-    cout << "End processing: " << now << "\n" << endl;
-#endif
-
     // Unpack the channelInfo struct.
     channelInfo *info = static_cast<channelInfo *>(userData);
     uint16_t ch = info->channel;
     uint32_t samplesToProcess = info->samplesToProcess;
     uint16_t numChannels = song->numChannels;
+
+#ifndef NDEBUG
+    boost::posix_time::ptime now = 
+        boost::posix_time::microsec_clock::local_time();
+    cout << "End processing channel " << ch << ": " << now << endl;
+
+    if (ch == numChannels - 1)
+    {
+        cout << endl;
+    }
+
+#endif
 
     // Copy the samplesToProcess samples from hostClippedAudioBuf, starting
     // at index ch * NUM_BUF_SAMPLES (to only look at this channel's data).
@@ -388,7 +395,7 @@ void processAudio(const boost::system::error_code &e,
 #ifndef NDEBUG
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
     cout << "Start processing: " << now << endl;
-#endif 
+#endif
 
     // Only process if we're not done processing the whole song.
     if (samplesProcessed < song->numSamplesPerChannel)
@@ -455,10 +462,13 @@ void processAudio(const boost::system::error_code &e,
             // multiplication by the transfer function, as well as dividing
             // by the number of samples per buffer (because of cuFFT's
             // scaling properties).
+            //
+            // Note that NUM_BUF_SAMPLES is passed in since the FFT's
+            // length is unchanged.
             cudaCallProcessBufKernel(NUM_BLOCKS, THREADS_PER_BLOCK,
                                      streams[ch],
                                      &devFFTAudioBuf[ch * numEntriesPerFFT],
-                                     devTransferFunc, samplesToProcess);
+                                     devTransferFunc, NUM_BUF_SAMPLES);
             checkCUDAKernelError();
             
             // Set up an inverse C->R FFT on this channel's data. 
@@ -549,12 +559,13 @@ void processAudio(const boost::system::error_code &e,
                     boost::asio::placeholders::error, processTimer));
 
         // If this is the first processAudio() call, set up a call to the
-        // playAudio() function, 0.5 * BUF_TIME_MU_S from now. The
-        // playAudio() function will then just call itself.
+        // playAudio() function, 0.5 * BUF_TIME_MU_S microseconds from now
+        // (delay arbitrarily chosen). The playAudio() function will then
+        // just call itself repeatedly.
         //
         // We carry out the first call to playAudio() here, because there's
         // a certain warm-up time before we can start processing audio very
-        // fast.
+        // fast. So we shouldn't do this in main().
         if (!doneWithFirstProcessCall)
         { 
             doneWithFirstProcessCall = true;
@@ -611,9 +622,6 @@ void playAudio(const boost::system::error_code &e,
             gpuErrChk( cudaEventSynchronize(finishedInterleaving[i]) );
         }
 
-        // TODO: add check to make sure GPU isn't doing anything as we load
-        // into hostOutputAudioBuf.
-    
         if (!buffer->loadFromSamples(hostOutputAudioBuf,
                                      samplesToPlay,
                                      numChannels,
@@ -706,7 +714,7 @@ int main(int argc, char *argv[])
         NUM_BUF_SAMPLES = numSamplesPerChannel;
         cerr << "The number of samples per buffer was greater than the "
              << "number of samples each channel\nhas, so it was set to "
-             << NUM_BUF_SAMPLES << " instead." << endl;
+             << NUM_BUF_SAMPLES << " instead.\n" << endl;
     }
 
     // Change the number of blocks in case it's too large, since the user
@@ -870,39 +878,27 @@ int main(int argc, char *argv[])
     
     /* 
      * Set up a timer to call the "processAudio" function periodically,
-     * with a waiting time of BUF_TIME_MU_S microseconds.
+     * with a waiting time of BUF_TIME_MU_S microseconds. Call the function
+     * immediately for now, though.
      */
 
     io = new boost::asio::io_service;
 
     boost::asio::deadline_timer processTimer(*io, 
-            boost::posix_time::microseconds(BUF_TIME_MU_S));
+            boost::posix_time::microseconds(100.0));
     processTimer.async_wait(boost::bind(processAudio,
                                         boost::asio::placeholders::error,
                                         &processTimer));
 
-    /*
-     * Wait until the first processAudio() call is over, and then make the
-     * first playAudio() call 0.5 * BUF_TIME_MU_S microseconds after that
-     * happens.
-     */
-
-
-    
-    
     /* Keep running until both processing and playing are done. */
     io->run();
-
-
-    // TODO
-
-    /* TEST code for convolution. */
-    
-    
-    /* TEST code for playback of data in a single buffer. */
     
     
     /* Free memory. */
+
+#ifndef NDEBUG
+    cout << "Freeing memory on host and device." << endl;
+#endif
 
     // Synchronize all GPU streams, destroy them, and free their array.
     for (int i = 0; i < numChannels; i++)
