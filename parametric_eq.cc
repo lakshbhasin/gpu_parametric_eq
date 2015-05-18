@@ -213,7 +213,7 @@ cudaEvent_t *finishedInterleaving;
 
 /* Function prototypes */
 
-void checkCUDAKernelError();
+void checkKernErr(const char *file, int line);
 void usage(const char *progName);
 
 void interleaveCallback(cudaStream_t stream, cudaError_t status,
@@ -306,17 +306,19 @@ void gpuFFTHandle(cufftResult errval, const char *file, int line)
 
 
 /**
- * Checks if the last kernel call had an error. If so, an error message is
- * printed and execution terminates.
+ * Macro and helper function to check if the last kernel call had an error.
+ * If so, an error message is printed and execution terminates.
  *
  */
-void checkCUDAKernelError()
+#define checkCUDAKernelError() { checkKernErr(__FILE__, __LINE__); }
+void checkKernErr(const char *file, int line)
 {   
     cudaError err = cudaGetLastError();
     
     if (cudaSuccess != err)
     {
-        cerr << "Error: " << cudaGetErrorString(err) << endl;
+        cerr << "CUDA kernel error: " << cudaGetErrorString(err) << 
+            " " << file << " " << line << endl;
         exit(EXIT_FAILURE);
     }
 }
@@ -394,7 +396,7 @@ void processAudio(const boost::system::error_code &e,
 
 #ifndef NDEBUG
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-    cout << "Start processing: " << now << endl;
+    cout << "Started processing: " << now << endl;
 #endif
 
     // Only process if we're not done processing the whole song.
@@ -480,7 +482,7 @@ void processAudio(const boost::system::error_code &e,
             // corresponding location in devUnclippedAudioBuf.
             gpuFFTChk( cufftExecC2R(inversePlans[ch],
                             &devFFTAudioBuf[ch * numEntriesPerFFT],
-                            &devUnclippedAudioBuf[ch * samplesToProcess]));
+                            &devUnclippedAudioBuf[ch * NUM_BUF_SAMPLES]));
 
             // Carry out clipping on this channel's output buffer, and
             // store the clipped result in the appropriate location in
@@ -520,17 +522,17 @@ void processAudio(const boost::system::error_code &e,
         
         samplesProcessed += samplesToProcess;
 
-        // Measure time taken to run the above processing code, so we know
-        // when to next call the timer.
+        // Measure time taken to run the above processing code, so we
+        // know when to next call the timer.
         std::chrono::steady_clock::time_point end = 
             std::chrono::steady_clock::now();
 
         uint64_t processTimeMuS = std::chrono::duration_cast
             <std::chrono::microseconds>(end - start).count();
 
-        // Subtract off processing time from waiting time, unless
-        // we're on the first call to processAudio() (in which case it'll
-        // take a while for the CPU and caches to warm up). 
+        // Subtract off processing time from waiting time, unless we're on
+        // the first call to processAudio() (in which case it'll take a
+        // while for the CPU and caches to warm up). 
         uint64_t muSecTillNextCall;
         
         if (!doneWithFirstProcessCall)
@@ -550,11 +552,11 @@ void processAudio(const boost::system::error_code &e,
         cout << "Set up GPU: " << now << endl;
         cout << "Next call: " << muSecTillNextCall << endl;
 #endif
-
+        
         // Set up another callback timer to this processing function, for
         // muSecTillNextCall from now.
         processTimer->expires_from_now(
-                        boost::posix_time::microseconds(muSecTillNextCall));
+                    boost::posix_time::microseconds(muSecTillNextCall));
         processTimer->async_wait(boost::bind(processAudio,
                     boost::asio::placeholders::error, processTimer));
 
@@ -623,14 +625,14 @@ void playAudio(const boost::system::error_code &e,
         }
 
         if (!buffer->loadFromSamples(hostOutputAudioBuf,
-                                     samplesToPlay,
+                                     samplesToPlay * numChannels,
                                      numChannels,
                                      song->samplingRate))
         {
             cerr << "Failed to load samples in hostOutputAudioBuf." << endl;
             exit(EXIT_FAILURE);
         }
-    
+        
         bufferSound->setBuffer(*buffer);
         bufferSound->play();
 
@@ -667,10 +669,10 @@ void playAudio(const boost::system::error_code &e,
         cout << "End setting up playing: " << now << "\n" << endl;
 #endif
 
-        // Set up another callback timer to this processing function, for
-        // muSecTillNextCall from now.
+        // Set up another callback timer to this processing function,
+        // for muSecTillNextCall from now.
         playTimer->expires_from_now(
-                        boost::posix_time::microseconds(muSecTillNextCall));
+                    boost::posix_time::microseconds(muSecTillNextCall));
         playTimer->async_wait(boost::bind(playAudio,
                     boost::asio::placeholders::error, playTimer));
     }
@@ -721,9 +723,10 @@ int main(int argc, char *argv[])
     // actually passed in a "max" number of blocks. We only really need to
     // spread out NUM_BUF_SAMPLES over all the blocks, with one thread per
     // sample.
-    NUM_BLOCKS = std::min(maxBlocks, (uint16_t) ceil(NUM_BUF_SAMPLES / 
-                                                     THREADS_PER_BLOCK));
-
+    NUM_BLOCKS = std::min(maxBlocks, 
+                          (uint16_t) ceil(((float) NUM_BUF_SAMPLES) / 
+                                          THREADS_PER_BLOCK));
+    
     // The amount of time that each buffer length corresponds to, in
     // microseconds.
     BUF_TIME_MU_S = (uint64_t) (((float) NUM_BUF_SAMPLES) /
@@ -853,10 +856,10 @@ int main(int argc, char *argv[])
     {
         gpuErrChk( cudaEventCreate(&finishedInterleaving[i]) );
     }
-
-
+    
+    
     /* Set up the transfer function on device. */
-
+    
     // TODO: add support for this to be updated as the user changes things.
     cudaCallFilterSetupKernel(NUM_BLOCKS, THREADS_PER_BLOCK,
                               /* stream */ 0, devFilters,

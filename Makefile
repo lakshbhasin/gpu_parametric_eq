@@ -17,7 +17,7 @@ CXXFLAGS 	= -std=c++11 -O3 -Wall
 LDFLAGS 	= -lboost_system -lboost_thread -lsfml-audio
 
 # Comment this out if debugging.
-# CXXFLAGS 	+= -DNDEBUG
+CXXFLAGS 	+= -DNDEBUG
 
 # OS-specific CUDA build flags
 ifneq ($(DARWIN),)
