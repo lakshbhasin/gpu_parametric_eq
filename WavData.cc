@@ -1,12 +1,14 @@
 #include "WavData.hh"
 
-WavData::WavData()
+WavData::WavData(const bool verbose) : 
+    verbose(verbose)
 {
     data = NULL;
     actualSize = 0;
+    numSamplesPerChannel = 0;
     numChannels = 0;
-    frequency = 0;
-    resolution = 0;
+    samplingRate = 0;
+    bitsPerSample = 0;
 }
 
 void WavData::loadData(const char *fname)
@@ -17,77 +19,147 @@ void WavData::loadData(const char *fname)
     {
         // Each char is 1 byte.
         char tag[5];
-        // Each unsigned short or short is 2 bytes.
-        unsigned short overallSize, formatLength, ch;
-        unsigned short freq, avgBytesSec, realSize;
-        unsigned short blockAlign, bitsPerSample;
-        short formatTag;
+
+        // Each of these is 4 bytes.
+        uint32_t overallSize, sampRate, realSize;
+
+        // Each of these is 2 bytes.
+        uint16_t formatLength, ch;
+        uint16_t avgBytesSec;
+        uint16_t blockAlign, bPerSample;
+        int16_t formatTag;
+
         fread(tag, sizeof(char), 4, wavFile);
-        // Sometimes there would be random trailing characters. Need
-        // to clean out.
+        
+        // Set last character of 4-character tag to NULL char.
         tag[4] = '\0';
+        
         if (!strcmp(tag, "RIFF"))
         {
             // Read in the size of overall file.
-            fread(&overallSize, sizeof(unsigned short), 2, wavFile);
+            fread(&overallSize, sizeof(uint32_t), 1, wavFile);
+
             // Make sure file type is WAVE.
             fread(tag, sizeof(char), 4, wavFile);
             tag[4] = '\0';
+
             if (!strcmp(tag, "WAVE"))
             {
-                cout << "Overall size: " << overallSize << " bytes" << endl;
+                if (verbose)
+                {
+                    cout << "Overall size: " << overallSize << " bytes"
+                         << endl;
+                }
+
                 // Header info "fmt "
                 fread(tag, sizeof(char), 4, wavFile);
                 tag[4] = '\0';
-                fread(&formatLength, sizeof(unsigned short), 2, wavFile);
-                fread(&formatTag, sizeof(short), 1, wavFile);
-                fread(&ch, sizeof(unsigned short), 1, wavFile);
-                cout << "Number of channels: " << ch << endl;
+
+                fread(&formatLength, sizeof(uint16_t), 2, wavFile);
+                fread(&formatTag, sizeof(int16_t), 1, wavFile);
+
+                fread(&ch, sizeof(uint16_t), 1, wavFile);
+                
+                if (verbose)
+                {
+                    cout << "Number of channels: " << ch << endl;
+                }
+                
                 numChannels = ch;
-                fread(&freq, sizeof(unsigned short), 2, wavFile);
-                cout << "Frequency: " << freq << " Hz" << endl;
-                frequency = freq;
+                
+                fread(&sampRate, sizeof(uint32_t), 1, wavFile);
+                
+                if (verbose)
+                {
+                    cout << "Sampling Rate: " << sampRate << " Hz" << endl;
+                }
+                
+                samplingRate = sampRate;
 
                 // (Sample Rate * Bits Per Sample * Channels) / 8
-                fread(&avgBytesSec, sizeof(unsigned short), 2, wavFile);
+                fread(&avgBytesSec, sizeof(uint16_t), 2, wavFile);
 
                 // (Bits Per Sample * Channels) / 8
-                fread(&blockAlign, sizeof(unsigned short), 1, wavFile);
-                fread(&bitsPerSample, sizeof(unsigned short), 1, wavFile);
-                cout << "Bits per sample: " << bitsPerSample << endl;
-                resolution = bitsPerSample;
+                fread(&blockAlign, sizeof(uint16_t), 1, wavFile);
+                fread(&bPerSample, sizeof(uint16_t), 1, wavFile);
+
+                // The bits per sample must (currently) be 16!
+                if (bPerSample != 16)
+                {
+                    cerr << "Error: bits per sample was " << bPerSample << 
+                        ", not" << " 16! Only 16-bit PCM audio can " <<
+                        "currently be\nprocessed." << endl;
+                    exit(EXIT_FAILURE);
+                }
+                
+                if (verbose)
+                {
+                    cout << "Bits per sample: " << bPerSample << endl;
+                }
+                
+                bitsPerSample = bPerSample;
+                
                 // Header for "data"
                 fread(tag, sizeof(char), 4, wavFile);
                 tag[4] = '\0';
 
-                fread(&realSize, sizeof(unsigned short), 2, wavFile);
-                cout << "Actual data size: " << realSize << " bytes" << endl;
+                fread(&realSize, sizeof(uint32_t), 1, wavFile);
+                
+                // TODO: figure out why the above read is an issue?
+                realSize = overallSize - 36;
+                
+                if (verbose)
+                {
+                    cout << "Actual data size: " << realSize << " bytes"
+                         << endl;
+                }
+
                 actualSize = realSize;
 
-                // Set up actual data of short array.
-                unsigned short numShorts = realSize / sizeof(short);
-                data = (short*)malloc(realSize);
-                fread(data, sizeof(short), numShorts, wavFile);
-                cout << "Loaded WAV file into WavData object." << endl;
+                // The number of samples per channel is given by taking
+                // realSize, dividing by the number of channels, and then
+                // dividing by the number of bytes per sample.
+                numSamplesPerChannel = realSize / 
+                    (numChannels * bitsPerSample/8);
+
+                if (verbose)
+                {
+                    cout << "Samples per channel: " << numSamplesPerChannel
+                        << endl;
+                }
+
+                // Set up actual data of 16-bit int array.
+                uint32_t numShorts = realSize / sizeof(int16_t);
+                data = (int16_t *) malloc(realSize);
+                fread(data, sizeof(int16_t), numShorts, wavFile);
+                
+                if (verbose)
+                {
+                    cout << "Loaded WAV file into WavData object.\n" << endl;
+                }
             }
             else
             {
-                cout << "Error: RIFF file but not a WAVE file!" << endl;
-                exit(1);
+                cerr << "Error: RIFF file but not a WAVE file!" << endl;
+                exit(EXIT_FAILURE);
             }
         }
         else
         {
             // Not a RIFF file. Throw error.
-            cout << "Error: not a RIFF-WAV file!" << endl;
-            exit(1);
+            cerr << "Error: not a RIFF-WAV file!" << endl;
+            exit(EXIT_FAILURE);
         }
     }
     // Close the file.
     fclose(wavFile);
 }
 
+
 WavData::~WavData()
 {
-    free(data);
+    if (data != NULL)
+    {
+        free(data);
+    }
 }

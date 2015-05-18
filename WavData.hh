@@ -2,6 +2,7 @@
 #define WAVDATA_HH
 
 #include <cstdlib>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <string.h> 
@@ -10,30 +11,39 @@
 // http://www.topherlee.com/software/pcm-tut-wavformat.html
 
 using std::cout;
+using std::cerr;
 using std::endl;
+using std::int16_t;
+using std::uint16_t;
 
 /* Class for WAV data */
 class WavData
 {
-    public:
-        /* Array of data */
-        short* data;
+public:
+    /* Whether verbose output is printed out. */
+    const bool verbose;
+    
+    /* Array of 16-bit PCM data. */
+    int16_t *data;
 
-        /* Size of actual audio data in bytes */
-        unsigned short actualSize;
+    /* Size of actual audio data in bytes */
+    uint32_t actualSize;
 
-        /* Number of channels */
-        unsigned short numChannels;
+    /* Number of channels */
+    uint16_t numChannels;
 
-        /* Sample rate or frequency */
-        unsigned short frequency;
+    /* The number of samples per channel */
+    uint32_t numSamplesPerChannel;
 
-        /* Resolution or bits per sample */
-        unsigned short resolution;
+    /* Sampling rate */
+    uint32_t samplingRate;
 
-        WavData();
-        void loadData(const char *fname);
-        ~WavData();
+    /* Bits per sample (e.g. 16 for 16-bit PCM sound). */
+    uint16_t bitsPerSample;
+
+    WavData(const bool verbose);
+    void loadData(const char *fname);
+    ~WavData();
 };
 
 #endif // WAVDATA_HH
