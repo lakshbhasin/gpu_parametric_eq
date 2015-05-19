@@ -21,10 +21,10 @@ void WavData::loadData(const char *fname)
         char tag[5];
 
         // Each of these is 4 bytes.
-        uint32_t overallSize, sampRate, realSize;
+        uint32_t overallSize, sampRate, realSize, formatLength;
 
         // Each of these is 2 bytes.
-        uint16_t formatLength, ch;
+        uint16_t ch;
         uint16_t avgBytesSec;
         uint16_t blockAlign, bPerSample;
         int16_t formatTag;
