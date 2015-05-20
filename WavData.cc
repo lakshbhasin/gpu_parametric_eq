@@ -21,12 +21,11 @@ void WavData::loadData(const char *fname)
         char tag[5];
 
         // Each of these is 4 bytes.
-        uint32_t overallSize, sampRate, realSize, formatLength;
+        uint32_t overallSize, sampRate, realSize;
+        uint32_t avgBytesSec, formatLength;
 
         // Each of these is 2 bytes.
-        uint16_t ch;
-        uint16_t avgBytesSec;
-        uint16_t blockAlign, bPerSample;
+        uint16_t ch, blockAlign, bPerSample;
         int16_t formatTag;
 
         fread(tag, sizeof(char), 4, wavFile);
@@ -120,7 +119,7 @@ void WavData::loadData(const char *fname)
                 // realSize, dividing by the number of channels, and then
                 // dividing by the number of bytes per sample.
                 numSamplesPerChannel = realSize / 
-                    (numChannels * bitsPerSample/8);
+                    (numChannels * bitsPerSample / 8);
 
                 if (verbose)
                 {

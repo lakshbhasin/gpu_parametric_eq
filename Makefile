@@ -13,7 +13,7 @@ GENCODE_FLAGS   := -gencode arch=compute_20,code=sm_20 \
 		   -gencode arch=compute_35,code=sm_35
 
 # g++ flags (not including CUDA flags)
-CXXFLAGS 	= -std=c++11 -O3 -Wall
+CXXFLAGS 	= -std=c++11 -O3 -Wall -Wno-unused-result
 LDFLAGS 	= -lboost_system -lboost_thread -lsfml-audio
 
 # Comment this out if debugging.
