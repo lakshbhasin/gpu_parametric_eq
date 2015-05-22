@@ -16,6 +16,9 @@ GENCODE_FLAGS   := -gencode arch=compute_20,code=sm_20 \
 CXXFLAGS 	= -std=c++11 -O3 -Wall -Wno-unused-result
 LDFLAGS 	= -lboost_system -lboost_thread -lsfml-audio
 
+# Qt flags
+QTFLAGS 	= $$(pkg-config --cflags --libs Qt5Widgets) -fPIC
+
 # Comment this out if debugging.
 CXXFLAGS 	+= -DNDEBUG
 
@@ -42,10 +45,14 @@ endif
 
 NVCCFLAGS += -O3 -I$(CUDA_INC_PATH)
 
-
-TARGETS = parametric_eq wav_test
+QT_SRCS = gui/main.cc gui/mainapp.cc gui/moc_mainapp.cc
+TARGETS = parametric_eq wav_test main
 
 all: $(TARGETS)
+
+main: $(QT_SRCS)
+	$(CXX) $(QTFLAGS) -o $@ $(QT_SRCS)
+
 
 wav_test: wav_test.o WavData.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
