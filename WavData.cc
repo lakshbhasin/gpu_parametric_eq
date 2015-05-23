@@ -154,6 +154,10 @@ void WavData::loadData(const char *fname)
     fclose(wavFile);
 }
 
+int WavData::duration()
+{
+    return actualSize / (samplingRate * numChannels * bitsPerSample / 8);
+}
 
 WavData::~WavData()
 {

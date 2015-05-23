@@ -222,7 +222,9 @@ void processAudio(const boost::system::error_code &e,
                   boost::asio::deadline_timer *processTimer);
 void playAudio(const boost::system::error_code &e,
                boost::asio::deadline_timer *playTimer);
-
+int processSound();
+void deploy(char *fileName, uint32_t numBufSamples,
+    uint16_t threadsPerBlock, uint16_t maxBlocks);
 
 /* Function implementations */
 
@@ -680,53 +682,8 @@ void playAudio(const boost::system::error_code &e,
 }
 
 
-int main(int argc, char *argv[])
+int processSound()
 {
-    /* Argument parsing */
-
-    // There should be 4 arguments.
-    if (argc != 5)
-    {
-        usage(argv[0]);
-    }
-
-    // Unpack the remaining arguments and check that they're valid.
-    char *fileName = argv[1];
-    NUM_BUF_SAMPLES = atoi(argv[2]);
-    THREADS_PER_BLOCK = atoi(argv[3]);
-    uint16_t maxBlocks = atoi(argv[4]);
-    
-    if (NUM_BUF_SAMPLES <= 0 || THREADS_PER_BLOCK <= 0 || maxBlocks <= 0)
-    {
-        usage(argv[0]);
-    }
-
-
-    /* Reading in the song's data, other setup. */
-
-    song = new WavData(/* verbose */ true);
-    song->loadData(fileName);
-    
-    // If NUM_BUF_SAMPLES exceeds the total number of samples per channel,
-    // then we have to decrease it.
-    uint32_t numSamplesPerChannel = song->numSamplesPerChannel;
-
-    if (NUM_BUF_SAMPLES > numSamplesPerChannel)
-    {
-        NUM_BUF_SAMPLES = numSamplesPerChannel;
-        cerr << "The number of samples per buffer was greater than the "
-             << "number of samples each channel\nhas, so it was set to "
-             << NUM_BUF_SAMPLES << " instead.\n" << endl;
-    }
-
-    // Change the number of blocks in case it's too large, since the user
-    // actually passed in a "max" number of blocks. We only really need to
-    // spread out NUM_BUF_SAMPLES over all the blocks, with one thread per
-    // sample.
-    NUM_BLOCKS = std::min(maxBlocks, 
-                          (uint16_t) ceil(((float) NUM_BUF_SAMPLES) / 
-                                          THREADS_PER_BLOCK));
-    
     // The amount of time that each buffer length corresponds to, in
     // microseconds.
     BUF_TIME_MU_S = (uint64_t) (((float) NUM_BUF_SAMPLES) /
@@ -945,4 +902,41 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
+void deploy(char *fileName, uint32_t numBufSamples,
+    uint16_t threadsPerBlock, uint16_t maxBlocks)
+{
+    NUM_BUF_SAMPLES = numBufSamples;
+    THREADS_PER_BLOCK = threadsPerBlock;
+    
+    if (NUM_BUF_SAMPLES <= 0 || THREADS_PER_BLOCK <= 0 || maxBlocks <= 0)
+    {
+        exit(1);
+    }
 
+    /* Reading in the song's data, other setup. */
+
+    song = new WavData(/* verbose */ true);
+    song->loadData(fileName);
+
+    // If NUM_BUF_SAMPLES exceeds the total number of samples per channel,
+    // then we have to decrease it.
+    uint32_t numSamplesPerChannel = song->numSamplesPerChannel;
+
+    if (NUM_BUF_SAMPLES > numSamplesPerChannel)
+    {
+        NUM_BUF_SAMPLES = numSamplesPerChannel;
+        cerr << "The number of samples per buffer was greater than the "
+             << "number of samples each channel\nhas, so it was set to "
+             << NUM_BUF_SAMPLES << " instead.\n" << endl;
+    }
+
+    // Change the number of blocks in case it's too large, since the user
+    // actually passed in a "max" number of blocks. We only really need to
+    // spread out NUM_BUF_SAMPLES over all the blocks, with one thread per
+    // sample.
+    NUM_BLOCKS = std::min(maxBlocks, 
+                          (uint16_t) ceil(((float) NUM_BUF_SAMPLES) / 
+                                          THREADS_PER_BLOCK));
+
+    //processSound();
+}

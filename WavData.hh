@@ -43,6 +43,7 @@ public:
 
     WavData(const bool verbose);
     void loadData(const char *fname);
+    int duration();
     ~WavData();
 };
 

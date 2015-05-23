@@ -17,11 +17,18 @@ public:
     ~MainApp();
 
 private slots:
-    void on_pushButton_clicked();
+    void on_fileSelectButton_clicked();
+
+    void on_processButton_clicked();
 
 private:
+    QString currDataFile;
+    int alreadyPlayed;
+    int duration;
     Ui::MainApp *ui;
     void initWindow();
+    QString calculateTimeString(int time);
+    void setTimeString();
 };
 
 #endif // MAINAPP_HH

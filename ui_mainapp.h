@@ -1,13 +1,13 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainapp.ui'
 **
-** Created by: Qt User Interface Compiler version 5.2.1
+** Created by: Qt User Interface Compiler version 5.4.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef UI_MAINAPP_HH
-#define UI_MAINAPP_HH
+#ifndef UI_MAINAPP_H
+#define UI_MAINAPP_H
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
@@ -35,9 +35,9 @@ class Ui_MainApp
 {
 public:
     QWidget *centralWidget;
-    QPushButton *pushButton;
+    QPushButton *fileSelectButton;
     QTextEdit *textEdit;
-    QPushButton *pushButton_2;
+    QPushButton *processButton;
     QWidget *horizontalLayoutWidget;
     QHBoxLayout *horizontalLayout;
     QSlider *verticalSlider;
@@ -54,9 +54,9 @@ public:
     QTextBrowser *textBrowser;
     QLabel *label_4;
     QLabel *label_5;
-    QLabel *label_logo;
-    QSpinBox *spinBox;
-    QSpinBox *spinBox_2;
+    QLabel *appLogo;
+    QSpinBox *threadsBlockBox;
+    QSpinBox *blockNum;
     QDial *dial_4;
     QDial *dial_5;
     QDial *dial_1;
@@ -80,15 +80,15 @@ public:
         MainApp->resize(1017, 559);
         centralWidget = new QWidget(MainApp);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
-        pushButton = new QPushButton(centralWidget);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
-        pushButton->setGeometry(QRect(660, 10, 101, 31));
+        fileSelectButton = new QPushButton(centralWidget);
+        fileSelectButton->setObjectName(QStringLiteral("fileSelectButton"));
+        fileSelectButton->setGeometry(QRect(660, 10, 101, 31));
         textEdit = new QTextEdit(centralWidget);
         textEdit->setObjectName(QStringLiteral("textEdit"));
         textEdit->setGeometry(QRect(10, 10, 631, 41));
-        pushButton_2 = new QPushButton(centralWidget);
-        pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
-        pushButton_2->setGeometry(QRect(770, 10, 231, 31));
+        processButton = new QPushButton(centralWidget);
+        processButton->setObjectName(QStringLiteral("processButton"));
+        processButton->setGeometry(QRect(770, 10, 231, 31));
         horizontalLayoutWidget = new QWidget(centralWidget);
         horizontalLayoutWidget->setObjectName(QStringLiteral("horizontalLayoutWidget"));
         horizontalLayoutWidget->setGeometry(QRect(680, 130, 311, 251));
@@ -139,7 +139,7 @@ public:
         progressBar->setValue(24);
         label = new QLabel(centralWidget);
         label->setObjectName(QStringLiteral("label"));
-        label->setGeometry(QRect(566, 90, 71, 20));
+        label->setGeometry(QRect(356, 90, 281, 20));
         label_2 = new QLabel(centralWidget);
         label_2->setObjectName(QStringLiteral("label_2"));
         label_2->setGeometry(QRect(640, 410, 41, 20));
@@ -158,15 +158,15 @@ public:
         label_5 = new QLabel(centralWidget);
         label_5->setObjectName(QStringLiteral("label_5"));
         label_5->setGeometry(QRect(500, 480, 121, 21));
-        label_logo = new QLabel(centralWidget);
-        label_logo->setObjectName(QStringLiteral("label_logo"));
-        label_logo->setGeometry(QRect(-20, 380, 171, 151));
-        spinBox = new QSpinBox(centralWidget);
-        spinBox->setObjectName(QStringLiteral("spinBox"));
-        spinBox->setGeometry(QRect(370, 450, 111, 27));
-        spinBox_2 = new QSpinBox(centralWidget);
-        spinBox_2->setObjectName(QStringLiteral("spinBox_2"));
-        spinBox_2->setGeometry(QRect(500, 450, 111, 27));
+        appLogo = new QLabel(centralWidget);
+        appLogo->setObjectName(QStringLiteral("appLogo"));
+        appLogo->setGeometry(QRect(-20, 380, 171, 151));
+        threadsBlockBox = new QSpinBox(centralWidget);
+        threadsBlockBox->setObjectName(QStringLiteral("threadsBlockBox"));
+        threadsBlockBox->setGeometry(QRect(370, 450, 111, 27));
+        blockNum = new QSpinBox(centralWidget);
+        blockNum->setObjectName(QStringLiteral("blockNum"));
+        blockNum->setGeometry(QRect(500, 450, 111, 27));
         dial_4 = new QDial(centralWidget);
         dial_4->setObjectName(QStringLiteral("dial_4"));
         dial_4->setEnabled(true);
@@ -267,8 +267,8 @@ public:
     void retranslateUi(QMainWindow *MainApp)
     {
         MainApp->setWindowTitle(QApplication::translate("MainApp", "MainApp", 0));
-        pushButton->setText(QApplication::translate("MainApp", "Select", 0));
-        pushButton_2->setText(QApplication::translate("MainApp", "Process", 0));
+        fileSelectButton->setText(QApplication::translate("MainApp", "Browse", 0));
+        processButton->setText(QApplication::translate("MainApp", "Process", 0));
         label->setText(QApplication::translate("MainApp", "0:00 / 3:00", 0));
         label_2->setText(QApplication::translate("MainApp", "FREQ", 0));
         label_3->setText(QApplication::translate("MainApp", "BW", 0));
@@ -282,7 +282,7 @@ public:
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">CUDA Version: 7.0</p></body></html>", 0));
         label_4->setText(QApplication::translate("MainApp", "Threads / Block", 0));
         label_5->setText(QApplication::translate("MainApp", "Max. # of Blocks", 0));
-        label_logo->setText(QString());
+        appLogo->setText(QString());
         label_6->setText(QApplication::translate("MainApp", "By Laksh Bhasin and Sharon Yang", 0));
     } // retranslateUi
 
@@ -294,4 +294,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // UI_MAINAPP_HH
+#endif // UI_MAINAPP_H
