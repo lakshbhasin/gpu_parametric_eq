@@ -49,8 +49,8 @@ QString MainApp::calculateTimeString(int time)
 {
     int seconds, hours, minutes;
     seconds = time % 60;
-    minutes = seconds / 60;
-    hours = minutes / 60;
+    minutes = time / 60 % 60;
+    hours = time / (60 * 60);
 
     QString timeStr = "";
     if (hours != 0)

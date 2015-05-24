@@ -2,4 +2,7 @@
 !*.*
 !*/
 *.o
+*.pro.user
+moc_mainapp.cpp
+ui_mainapp.h
 
