@@ -17,7 +17,7 @@ CXXFLAGS 	= -std=c++11 -O3 -Wall
 LDFLAGS 	= -lboost_system -lboost_thread -lsfml-audio
 
 # Comment this out if debugging.
-CXXFLAGS 	+= -DNDEBUG
+# CXXFLAGS 	+= -DNDEBUG
 
 # OS-specific CUDA build flags
 ifneq ($(DARWIN),)
@@ -47,20 +47,20 @@ LDFLAGS += -Wno-unused-result -Wno-unused-parameter -Wno-unused-variable
 NVCCFLAGS += -O3 -I$(CUDA_INC_PATH)
 
 
-TARGETS = parametric_eq wav_test
+TARGETS = parametric_eq_test wav_test
 
 all: $(TARGETS)
 
 wav_test: wav_test.o WavData.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
-parametric_eq: parametric_eq.o parametric_eq_cuda.o WavData.o
+parametric_eq_test: parametric_eq_test.o parametric_eq.o parametric_eq_cuda.o WavData.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 parametric_eq_cuda.o: parametric_eq_cuda.cu parametric_eq_cuda.cuh
 	$(NVCC) $(NVCCFLAGS) $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -c $< -o $@
 
-%.o: %.cc
+%.o: %.cc %.hh
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
