@@ -3,7 +3,8 @@ FORMS    += ui/mainapp.ui
 QMAKE_CXXFLAGS  += -std=c++11 -Wall -Wno-unused-result \
                    -Wno-unused-parameter -Wno-unused-variable
 QMAKE_LFLAGS    += -lboost_system -lboost_thread -lsfml-audio \
-                   -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread
+                   -lsfml-system -lQt5Widgets -lQt5Gui -lQt5Core \
+                   -lGL -lpthread
 QMAKE_CLEAN     += gui 
 
 UI_DIR = ./ui
@@ -11,7 +12,7 @@ MOC_DIR = ./ui
 
 # Specific flags for release configuration
 QMAKE_CXXFLAGS_RELEASE  -= -O2
-QMAKE_CXXFLAGS_RELEASE  += -O3 -DNDEBUG
+QMAKE_CXXFLAGS_RELEASE  += -O3 #-DNDEBUG
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TEMPLATE = app
@@ -27,8 +28,10 @@ CUDA_SDK = "/opt/cuda"            # Path to cuda SDK install
 CUDA_DIR = "/opt/cuda"            # Path to cuda toolkit install
 
 # Input
-HEADERS += parametric_eq.hh parametric_eq_cuda.cuh WavData.hh ui/mainapp.hh
-SOURCES += main.cc parametric_eq.cc WavData.cc ui/mainapp.cc
+HEADERS += parametric_eq.hh parametric_eq_cuda.cuh eq_stream.hh \
+           WavData.hh ui/mainapp.hh
+SOURCES += main.cc parametric_eq.cc eq_stream.cc WavData.cc \
+           ui/mainapp.cc
 
 # DO NOT EDIT BEYOND THIS UNLESS YOU KNOW WHAT YOU ARE DOING....
 

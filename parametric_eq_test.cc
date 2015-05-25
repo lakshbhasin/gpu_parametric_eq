@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     float freq = 300.0;          // Hz
     float bandwidth = 100.0;     // Hz
-    float gain = 20.0;           // dB (must be positive)
+    float gain = 15.0;           // dB (must be positive)
 
     BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));

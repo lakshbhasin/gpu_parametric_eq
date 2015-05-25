@@ -14,10 +14,10 @@ GENCODE_FLAGS   := -gencode arch=compute_20,code=sm_20 \
 
 # g++ flags (not including CUDA flags)
 CXXFLAGS 	= -std=c++11 -O3 -Wall
-LDFLAGS 	= -lboost_system -lboost_thread -lsfml-audio
+LDFLAGS 	= -lboost_system -lboost_thread -lsfml-audio -lsfml-system
 
 # Comment this out if debugging.
-# CXXFLAGS 	+= -DNDEBUG
+CXXFLAGS 	+= -DNDEBUG
 
 # OS-specific CUDA build flags
 ifneq ($(DARWIN),)
@@ -54,7 +54,8 @@ all: $(TARGETS)
 wav_test: wav_test.o WavData.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
-parametric_eq_test: parametric_eq_test.o parametric_eq.o parametric_eq_cuda.o WavData.o
+parametric_eq_test: parametric_eq_test.o parametric_eq.o eq_stream.o \
+	parametric_eq_cuda.o WavData.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 parametric_eq_cuda.o: parametric_eq_cuda.cu parametric_eq_cuda.cuh

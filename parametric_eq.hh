@@ -31,8 +31,9 @@
 /* SFML includes */
 #include <SFML/Audio.hpp>
 
-/* Other classes */
+/* Custom classes' includes */
 #include "WavData.hh"
+#include "eq_stream.hh"
 
 using std::cerr;
 using std::cout;
@@ -68,6 +69,9 @@ private:
     bool processAudioPaused = false;
     bool playAudioPaused = false;
 
+    // Tracks whether this is the first playAudio() call.
+    bool firstPlayCall = true;
+
     // The number of threads per block to use. This should only be
     // changeable if the EQ is not processing.
     uint16_t threadsPerBlock = 0;
@@ -76,8 +80,8 @@ private:
     // processing.
     uint16_t numBlocks = 0;
 
-    // The number of samples to use per buffer. This is only changeable if
-    // the EQ is not processing.
+    // The number of samples to use per buffer and **per channel**. This is
+    // only changeable if the EQ is not processing.
     uint32_t numBufSamples = 0;
 
     // The amount of time it takes to play a full buffer of audio, in
@@ -91,9 +95,8 @@ private:
     // The buffer we'll use to load sound into.
     sf::SoundBuffer *buffer = NULL;
 
-    // The sound that we play while buffering.
-    // TODO: turn into a stream.
-    sf::Sound *bufferSound = NULL;
+    // The sound stream that we'll load audio into while buffering.
+    EQStream *soundStream = NULL;
 
     // Tracks whether we've completed the first process call to
     // processAudio() for this song. This will signal the first playback.
@@ -188,6 +191,10 @@ private:
     // A mutex to make sure multiple threads don't try to free back-end
     // memory at the same time.
     std::mutex freeBackendMemMutex;
+    
+    // A mutex to make sure multiple threads don't try to stop processing
+    // audio at the same time.
+    std::mutex stopProcessingMutex;
 
     static void interleaveCallback(cudaStream_t stream, cudaError_t status,
                                    void *userData);

@@ -366,18 +366,6 @@ void ParametricEQ::interleaveCallback(cudaStream_t stream,
     uint32_t samplesToProcess = info->samplesToProcess;
     uint16_t numChannels = (thisEQ->getSong())->numChannels;
 
-#ifndef NDEBUG
-    boost::posix_time::ptime now = 
-        boost::posix_time::microsec_clock::local_time();
-    cout << "End processing channel " << ch << ": " << now << endl;
-
-    if (ch == numChannels - 1)
-    {
-        cout << endl;
-    }
-
-#endif
-
     // Copy the samplesToProcess samples from hostClippedAudioBuf, starting
     // at index ch * numBufSamples (to only look at this channel's data).
     // These will be copied into hostOutputAudioBuf, which requires
@@ -392,6 +380,18 @@ void ParametricEQ::interleaveCallback(cudaStream_t stream,
         hostOutputAudioBuf[i * numChannels + ch] = 
             hostClippedAudioBuf[startIndex + i];
     }
+
+
+#ifndef NDEBUG
+    boost::posix_time::ptime now = 
+        boost::posix_time::microsec_clock::local_time();
+    cout << "End processing channel " << ch << ": " << now << endl;
+
+    if (ch == numChannels - 1)
+    {
+        cout << endl;
+    }
+#endif
 
     delete info;
 }
@@ -684,7 +684,7 @@ void ParametricEQ::playAudio(const boost::system::error_code &e,
             gpuErrChk( cudaEventSynchronize(finishedInterleaving[i]) );
         }
 
-        // TODO: change to use streams.
+        // Load the samples into a SoundBuffer. 
         if (!buffer->loadFromSamples(hostOutputAudioBuf,
                                      samplesToPlay * numChannels,
                                      numChannels,
@@ -693,9 +693,23 @@ void ParametricEQ::playAudio(const boost::system::error_code &e,
             cerr << "Failed to load samples in hostOutputAudioBuf." << endl;
             exit(EXIT_FAILURE);
         }
-        
-        bufferSound->setBuffer(*buffer);
-        bufferSound->play();
+
+        // If this is the first call to playAudio(), we'll load data into
+        // the stream and start playing the stream (which occurs on a
+        // separate thread).
+        if (firstPlayCall)
+        {
+            firstPlayCall = false;
+
+            soundStream->addBufferData(*buffer);
+            soundStream->play();
+        }
+        else
+        {
+            // Otherwise, just add the buffer data (since the stream is
+            // already playing).
+            soundStream->addBufferData(*buffer);
+        }
 
 #ifndef NDEBUG
         now = boost::posix_time::microsec_clock::local_time();
@@ -748,18 +762,6 @@ void ParametricEQ::startProcessingSound()
     
     /* Host storage */
     
-    // Set up the buffer and bufferSound.
-    // TODO: change to use streams.
-    buffer = new sf::SoundBuffer;
-    bufferSound = new sf::Sound;
-
-    // Set internal state variables.
-    paused = false;
-    processAudioPaused = false;
-    playAudioPaused = false;
-    samplesPlayed = 0;
-    samplesProcessed = 0;
-
     // If numBufSamples exceeds the total number of samples per channel,
     // then we have to decrease it.
     uint32_t numSamplesPerChannel = song->numSamplesPerChannel;
@@ -776,6 +778,22 @@ void ParametricEQ::startProcessingSound()
     // microseconds.
     bufTimeMuS = (uint64_t) (((float) numBufSamples) /
                              song->samplingRate * 1.0e6);
+
+    // Set up the buffer and sound stream.
+    buffer = new sf::SoundBuffer;
+    soundStream = new EQStream(song->samplingRate, song->numChannels,
+                               numBufSamples, 
+                               song->numSamplesPerChannel * 
+                               song->numChannels);
+                               
+    // Set internal state variables.
+    paused = false;
+    processAudioPaused = false;
+    playAudioPaused = false;
+    firstPlayCall = true;
+    doneWithFirstProcessCall = false;
+    samplesPlayed = 0;
+    samplesProcessed = 0;
 
     // The array of host "input" audio buffers will have numChannels *
     // numBufSamples entries. Channels' data will be stored contiguously,
@@ -874,7 +892,18 @@ void ParametricEQ::startProcessingSound()
     processing = true;
     io->run();
     processing = false;
-    
+
+    // Wait until the EQStream is done too.
+    while (soundStream->getStatus() == EQStream::Playing)
+    {
+        // Sleep 1 ms at a time.
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+#ifndef NDEBUG
+    cout << "EQStream finished playing." << endl;
+#endif
+
     /* Clean up. */
     stopProcessingSound();
 }
@@ -889,6 +918,8 @@ void ParametricEQ::startProcessingSound()
  */
 void ParametricEQ::stopProcessingSound()
 {
+    stopProcessingMutex.lock();
+
     // Pause processAudio() and playAudio(), if they're not already done.
     if (processing)
     {
@@ -899,10 +930,13 @@ void ParametricEQ::stopProcessingSound()
     samplesPlayed = 0;
     samplesProcessed = 0;
     doneWithFirstProcessCall = false;
+    firstPlayCall = true;
     processing = false;
     paused = false;
 
     freeAllBackendMemory();
+
+    stopProcessingMutex.unlock();
 }
 
 
@@ -926,6 +960,12 @@ void ParametricEQ::pauseProcessingSound()
     {
         // Sleep 1 ms at a time.
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    // Then pause the sound stream too.
+    if (soundStream != NULL)
+    {
+        soundStream->pause();
     }
 }
 
@@ -1005,12 +1045,12 @@ void ParametricEQ::freeFilterProperties()
  */
 void ParametricEQ::freeAllBackendMemory()
 {
+    // Acquire a mutex lock.
+    freeBackendMemMutex.lock();
+
 #ifndef NDEBUG
     cout << "Freeing back-end memory on host and device." << endl;
 #endif
- 
-    // Acquire a mutex lock.
-    freeBackendMemMutex.lock();
 
     // Check if the streams haven't been freed before.
     if (streams != NULL)
@@ -1047,12 +1087,6 @@ void ParametricEQ::freeAllBackendMemory()
         io = NULL;
     }
 
-    if (bufferSound != NULL)
-    {
-        delete bufferSound;
-        bufferSound = NULL;
-    }
-
     if (buffer != NULL)
     {
         delete buffer;
@@ -1075,6 +1109,14 @@ void ParametricEQ::freeAllBackendMemory()
     {
         free(hostOutputAudioBuf);
         hostOutputAudioBuf = NULL;
+    }
+
+    if (soundStream != NULL)
+    {
+        // Signal the sound stream to stop first, before deleting it.
+        soundStream->signalStop();
+        delete soundStream;
+        soundStream = NULL;
     }
    
     // Free cuFFT plans.
