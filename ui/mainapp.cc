@@ -235,8 +235,8 @@ void MainApp::on_fileSelectButton_clicked()
         // TODO: let number of samples per buffer etc be configurable.
         paramEQ->setSong(charDataPath);
         paramEQ->setNumBufSamples(4096);
-        paramEQ->setThreadsPerBlock(512);
-        paramEQ->setMaxBlocks(200);
+        paramEQ->setThreadsPerBlock(threadNumPerBlock);
+        paramEQ->setMaxBlocks(maxNumBlock);
 
         // Read the song's duration and update the time string.
         int newDuration = (paramEQ->getSong())->duration();
@@ -305,6 +305,48 @@ void MainApp::on_processButton_clicked()
         timer->start(500);
     }
     
+}
+
+void MainApp::on_threadsBlockBox_editingFinished()
+{
+    int newThreadsBlock = ui->threadsBlockBox->value();
+    try
+    {
+        paramEQ->setThreadsPerBlock(newThreadsBlock);
+    }
+    catch (std::exception e)
+    {
+        ui->statusBar->showMessage(e.what(), 5000);
+        cout << e.what() << endl;
+        ui->threadsBlockBox->setValue(200);
+        return;
+    }
+    threadNumPerBlock = newThreadsBlock;
+    QString msg = "Threads per block has been set to " + \
+        threadNumPerBlock;
+    cout << msg.toLocal8Bit().data() << endl;
+    ui->statusBar->showMessage(msg, 5000);
+}
+
+void MainApp::on_blockNum_editingFinished()
+{
+    int newBlockNum = ui->blockNum->value();
+    try
+    {
+        paramEQ->setMaxBlocks(newBlockNum);
+    }
+    catch (std::logic_error e)
+    {
+        ui->statusBar->showMessage(e.what(), 5000);
+        cout << e.what() << endl;
+        ui->blockNum->setValue(maxNumBlock);
+        return;
+    }
+    maxNumBlock = newBlockNum;
+    QString msg = "Max number of blocks has been set to " + \
+        int(maxNumBlock);
+    cout << msg.toLocal8Bit().data() << endl;
+    ui->statusBar->showMessage(msg, 5000);
 }
 
 

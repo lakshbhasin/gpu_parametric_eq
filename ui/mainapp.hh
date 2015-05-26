@@ -40,6 +40,10 @@ private slots:
 
     void on_processButton_clicked();
 
+    void on_threadsBlockBox_editingFinished();
+
+    void on_blockNum_editingFinished();
+
     void setNewDuration(int newDuration);
 
     void updatePosition();
@@ -71,6 +75,9 @@ private:
     // Timer to query the samples played by the
     // equalizer.
     QTimer *timer;
+
+    int threadNumPerBlock = 512;
+    int maxNumBlock = 200;
 
     void initWindow();
     QString calculateTimeString(int time);
