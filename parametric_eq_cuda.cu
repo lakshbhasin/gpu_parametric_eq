@@ -123,6 +123,11 @@ void cudaFilterSetupKernel(const Filter *filters,
             }
         }
 
+        // Divide by numFilters in order to take a "weighted average" of
+        // the filters.
+        output.x /= numFilters;
+        output.y /= numFilters;
+
         // Write the "output" to global memory.
         transferFunc[transFuncInd] = output;
         
