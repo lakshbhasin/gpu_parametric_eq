@@ -127,6 +127,20 @@ void MainApp::initWindow()
     ui->blockNum->setMinimum(1);
     ui->blockNum->setMaximum(400);
     ui->blockNum->setValue(200);
+
+    // Set connection for slider and display
+    connect(ui->verticalSlider, SIGNAL(valueChanged(int)),
+        ui->lcdNumber, SLOT(display(int)));
+    connect(ui->verticalSlider_2, SIGNAL(valueChanged(int)),
+        ui->lcdNumber_2, SLOT(display(int)));
+    connect(ui->verticalSlider_3, SIGNAL(valueChanged(int)),
+        ui->lcdNumber_3, SLOT(display(int)));
+    connect(ui->verticalSlider_4, SIGNAL(valueChanged(int)),
+        ui->lcdNumber_4, SLOT(display(int)));
+    connect(ui->verticalSlider_5, SIGNAL(valueChanged(int)),
+        ui->lcdNumber_5, SLOT(display(int)));
+    connect(ui->verticalSlider_6, SIGNAL(valueChanged(int)),
+        ui->lcdNumber_6, SLOT(display(int)));
 }
 
 
