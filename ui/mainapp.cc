@@ -150,14 +150,14 @@ QString MainApp::calculateTimeString(int time)
             timeStr += QString::number(hours);
         timeStr += ":";
     }
-    if (minutes > 10)
+    if (minutes > 9)
         timeStr += QString::number(minutes);
     else
     {
         timeStr += "0" + QString::number(minutes);
     }
     timeStr += ":";
-    if (seconds > 10)
+    if (seconds > 9)
         timeStr += QString::number(seconds);
     else
     {
@@ -178,6 +178,33 @@ void MainApp::setTimeString()
     QString fullLength = calculateTimeString(duration);
     QString playLabel = played + " / " + fullLength;
     ui->label->setText(playLabel);
+    ui->label->repaint();
+}
+
+/**
+ * This function is called to initialize new duration
+ * when a song is loaded after file selection.
+ */
+void MainApp::setNewDuration(int newDuration)
+{
+    duration = newDuration;
+    alreadyPlayed = 0;
+    setTimeString();
+    ui->progressBar->setRange(alreadyPlayed, duration);
+    ui->progressBar->setValue(alreadyPlayed);
+    ui->progressBar->repaint();
+}
+
+/**
+ * This function is called by timer to query the
+ * time played of the current song.
+ */
+void MainApp::updatePosition()
+{
+    alreadyPlayed = paramEQ->getPlayedTime();
+    setTimeString();
+    ui->progressBar->setValue(alreadyPlayed);
+    ui->progressBar->repaint();
 }
 
 
@@ -212,9 +239,8 @@ void MainApp::on_fileSelectButton_clicked()
         paramEQ->setMaxBlocks(200);
 
         // Read the song's duration and update the time string.
-        duration = (paramEQ->getSong())->duration();
-        alreadyPlayed = 0;
-        setTimeString();
+        int newDuration = (paramEQ->getSong())->duration();
+        setNewDuration(newDuration);
     }
 }
 
@@ -261,6 +287,7 @@ void MainApp::on_processButton_clicked()
         
         processing = false;
         paramEQ->stopProcessingSound();
+        timer->stop();
     }
     else
     {
@@ -272,6 +299,10 @@ void MainApp::on_processButton_clicked()
         processing = true;
         boost::thread processingThread(boost::bind(
                     &MainApp::initiateProcessing, this));
+        timer = new QTimer(this);
+        connect(timer, SIGNAL(timeout()), this, SLOT(updatePosition()));
+        // Timer to query the samples played every half second.
+        timer->start(500);
     }
     
 }

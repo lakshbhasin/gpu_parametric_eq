@@ -1,6 +1,7 @@
 #ifndef WAVDATA_HH
 #define WAVDATA_HH
 
+#include <cmath> // for ceil
 #include <cstdlib>
 #include <cstdint>
 #include <fstream>

@@ -104,7 +104,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QProgressBar" name="progressBar">
+   <widget class="QSlider" name="progressBar">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -114,7 +114,10 @@
      </rect>
     </property>
     <property name="value">
-     <number>24</number>
+     <number>0</number>
+    </property>
+     <property name="orientation">
+     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
    <widget class="QLabel" name="label">

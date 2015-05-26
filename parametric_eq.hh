@@ -222,6 +222,7 @@ public:
     int16_t *getHostClippedAudioBuf();
     WavData *getSong();
     uint32_t getNumBufSamples();
+    int getPlayedTime();
 
     // Song playback functions
     void startProcessingSound();

@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTimer>
 
 /* Boost includes */
 #include <boost/thread.hpp>
@@ -39,6 +40,10 @@ private slots:
 
     void on_processButton_clicked();
 
+    void setNewDuration(int newDuration);
+
+    void updatePosition();
+
 private:
 
     // The internal ParametricEQ to use. 
@@ -62,7 +67,11 @@ private:
 
     // The Qt UI to set up
     Ui::MainApp *ui;
-    
+
+    // Timer to query the samples played by the
+    // equalizer.
+    QTimer *timer;
+
     void initWindow();
     QString calculateTimeString(int time);
     void setTimeString();

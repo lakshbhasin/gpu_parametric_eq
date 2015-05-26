@@ -344,6 +344,15 @@ uint32_t ParametricEQ::getNumBufSamples()
     return numBufSamples;
 }
 
+/**
+ * Helper function to return the played time (in seconds
+ * of our audio stream.
+ */
+int ParametricEQ::getPlayedTime()
+{
+    // ceil function is useful here for case of file < 1 second.
+    return int(std::ceil((double)samplesPlayed / song->samplingRate));
+}
 
 /**
  * A callback function that gets signalled whenever a channel's data has
