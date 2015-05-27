@@ -338,6 +338,10 @@ WavData * ParametricEQ::getSong()
     return song;
 }
 
+Filter * ParametricEQ::getCurrentFilter()
+{
+    return hostFilters;
+}
 
 uint32_t ParametricEQ::getNumBufSamples()
 {

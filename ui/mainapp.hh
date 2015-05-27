@@ -21,17 +21,29 @@
 #include "ui_mainapp.h"
 #include "parametric_eq.hh"
 
-/* Default value for Freq and BW. */
-#define DEFAULT_FREQ 100
-#define DEFAULT_BW 100
-
 /* Min and max for knob values. */
 #define KNOB_SET 6
 #define KNOB_MIN 0
 #define KNOB_MAX 22000
 
+/* Default value for Freq, BW, and gain. */
+#define FREQ_BW_DEFAULT1 64.0
+#define FREQ_BW_DEFAULT2 128.0
+#define FREQ_BW_DEFAULT3 256.0
+#define FREQ_BW_DEFAULT4 512.0
+#define FREQ_BW_DEFAULT5 1024.0
+#define FREQ_BW_DEFAULT6 2048.0
+#define GAIN_DEFAULT1 0.0
+#define GAIN_DEFAULT2 0.0
+#define GAIN_DEFAULT3 20.0
+#define GAIN_DEFAULT4 0.0
+#define GAIN_DEFAULT5 0.0
+#define GAIN_DEFAULT6 0.0
+
 /* How much change for each twist in knob. */
 #define KNOB_STEP 10
+#define GAIN_MAX 30
+#define GAIN_MIN -30
 
 namespace Ui {
 class MainApp;
@@ -60,6 +72,18 @@ private slots:
     void setNewDuration(int newDuration);
 
     void updatePosition();
+
+    void sliderGain1(int value);
+
+    void sliderGain2(int value);
+
+    void sliderGain3(int value);
+
+    void sliderGain4(int value);
+
+    void sliderGain5(int value);
+
+    void sliderGain6(int value);
 
     void twistKnob1(int value);
 
@@ -115,16 +139,24 @@ private:
     int threadNumPerBlock = 512;
     int maxNumBlock = 200;
 
+    // Keep track of current freq and bw values
     int dialValue[KNOB_SET * 2];
+
+    // This is necessary for QDial to be twisted
     int previousValue[KNOB_SET * 2];
+
+    // Keep track of current gain values
+    int gain[KNOB_SET];
 
     void initWindow();
     QString calculateTimeString(int time);
     void setTimeString();
     int knobDirection(int knobNum, int v);
-    void setKnobLabel(int knobNum, int direction);
+    void setKnobValue(int knobNum, int direction);
     void freeFilterProperties();
     void initiateProcessing();
+    void updateFilter(int filterNum, int newGain, int newFreq,
+        int newBW, bool cut);
 };
 
 #endif // MAINAPP_HH

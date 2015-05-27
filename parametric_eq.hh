@@ -223,6 +223,7 @@ public:
     WavData *getSong();
     uint32_t getNumBufSamples();
     int getPlayedTime();
+    Filter *getCurrentFilter();
 
     // Song playback functions
     void startProcessingSound();

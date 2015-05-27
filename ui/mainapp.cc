@@ -9,9 +9,9 @@ MainApp::MainApp(QWidget *parent) :
     filters = (Filter *) malloc(NUM_FILTERS * sizeof(Filter));
 
     // The first filter will initially be at 64 Hz.
-    float freq1 = 64.0;             // Hz
-    float bandwidth1 = 64.0;        // Hz
-    float gain1 = 0.0;              // dB (must be positive)
+    float freq1 = FREQ_BW_DEFAULT1;             // Hz
+    float bandwidth1 = FREQ_BW_DEFAULT1;        // Hz
+    float gain1 = GAIN_DEFAULT1;                // dB (must be positive)
     BandBoostCutProp *bandBCProp1 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp1->omegaNought = 2.0 * M_PI * freq1;
@@ -22,9 +22,9 @@ MainApp::MainApp(QWidget *parent) :
     filters[0].bandBCProp = bandBCProp1;
 
     // The second filter will initially be at 128 Hz.
-    float freq2 = 128.0;
-    float bandwidth2 = 128.0;
-    float gain2 = 0.0;
+    float freq2 = FREQ_BW_DEFAULT2;
+    float bandwidth2 = FREQ_BW_DEFAULT2;
+    float gain2 = GAIN_DEFAULT2;
     BandBoostCutProp *bandBCProp2 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp2->omegaNought = 2.0 * M_PI * freq2;
@@ -36,9 +36,9 @@ MainApp::MainApp(QWidget *parent) :
     
     // The third filter will initially be at 256 Hz.
     // TODO: change this back so it has no gain.
-    float freq3 = 256.0;
-    float bandwidth3 = 256.0;
-    float gain3 = 20.0;
+    float freq3 = FREQ_BW_DEFAULT3;
+    float bandwidth3 = FREQ_BW_DEFAULT3;
+    float gain3 = GAIN_DEFAULT3;
     BandBoostCutProp *bandBCProp3 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp3->omegaNought = 2.0 * M_PI * freq3;
@@ -49,9 +49,9 @@ MainApp::MainApp(QWidget *parent) :
     filters[2].bandBCProp = bandBCProp3;
 
     // The fourth filter will initially be at 512 Hz.
-    float freq4 = 512.0;
-    float bandwidth4 = 512.0;
-    float gain4 = 0.0;
+    float freq4 = FREQ_BW_DEFAULT4;
+    float bandwidth4 = FREQ_BW_DEFAULT4;
+    float gain4 = GAIN_DEFAULT4;
     BandBoostCutProp *bandBCProp4 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp4->omegaNought = 2.0 * M_PI * freq4;
@@ -62,9 +62,9 @@ MainApp::MainApp(QWidget *parent) :
     filters[3].bandBCProp = bandBCProp4;
 
     // The fifth filter will initially be at 1024 Hz.
-    float freq5 = 1024.0;
-    float bandwidth5 = 1024.0;
-    float gain5 = 0.0;
+    float freq5 = FREQ_BW_DEFAULT5;
+    float bandwidth5 = FREQ_BW_DEFAULT5;
+    float gain5 = GAIN_DEFAULT5;
     BandBoostCutProp *bandBCProp5 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp5->omegaNought = 2.0 * M_PI * freq5;
@@ -75,9 +75,9 @@ MainApp::MainApp(QWidget *parent) :
     filters[4].bandBCProp = bandBCProp5;
 
     // The sixth filter will initially be at 2048 Hz.
-    float freq6 = 2048.0;
-    float bandwidth6 = 2048.0;
-    float gain6 = 0.0;
+    float freq6 = FREQ_BW_DEFAULT6;
+    float bandwidth6 = FREQ_BW_DEFAULT6;
+    float gain6 = GAIN_DEFAULT6;
     BandBoostCutProp *bandBCProp6 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp6->omegaNought = 2.0 * M_PI * freq6;
@@ -132,39 +132,63 @@ void MainApp::initWindow()
 
     // Set connection for slider and display
     connect(ui->verticalSlider, SIGNAL(valueChanged(int)),
-        ui->lcdNumber, SLOT(display(int)));
+        this, SLOT(sliderGain1(int)));
     connect(ui->verticalSlider_2, SIGNAL(valueChanged(int)),
-        ui->lcdNumber_2, SLOT(display(int)));
+        this, SLOT(sliderGain2(int)));
     connect(ui->verticalSlider_3, SIGNAL(valueChanged(int)),
-        ui->lcdNumber_3, SLOT(display(int)));
+        this, SLOT(sliderGain3(int)));
     connect(ui->verticalSlider_4, SIGNAL(valueChanged(int)),
-        ui->lcdNumber_4, SLOT(display(int)));
+        this, SLOT(sliderGain4(int)));
     connect(ui->verticalSlider_5, SIGNAL(valueChanged(int)),
-        ui->lcdNumber_5, SLOT(display(int)));
+        this, SLOT(sliderGain5(int)));
     connect(ui->verticalSlider_6, SIGNAL(valueChanged(int)),
-        ui->lcdNumber_6, SLOT(display(int)));
+        this, SLOT(sliderGain6(int)));
+
+    // Set default for gain
+    ui->verticalSlider->setValue((int)GAIN_DEFAULT1);
+    ui->verticalSlider_2->setValue((int)GAIN_DEFAULT2);
+    ui->verticalSlider_3->setValue((int)GAIN_DEFAULT3);
+    ui->verticalSlider_4->setValue((int)GAIN_DEFAULT4);
+    ui->verticalSlider_5->setValue((int)GAIN_DEFAULT5);
+    ui->verticalSlider_6->setValue((int)GAIN_DEFAULT6);
+
+    gain[0] = (int)GAIN_DEFAULT1;
+    gain[1] = (int)GAIN_DEFAULT2;
+    gain[2] = (int)GAIN_DEFAULT3;
+    gain[3] = (int)GAIN_DEFAULT4;
+    gain[4] = (int)GAIN_DEFAULT5;
+    gain[5] = (int)GAIN_DEFAULT6;
 
     // Set default for freq and bandwidth
-    ui->lcdNumber_7->display(DEFAULT_FREQ);
-    ui->lcdNumber_8->display(DEFAULT_FREQ);
-    ui->lcdNumber_9->display(DEFAULT_FREQ);
-    ui->lcdNumber_10->display(DEFAULT_FREQ);
-    ui->lcdNumber_11->display(DEFAULT_FREQ);
-    ui->lcdNumber_12->display(DEFAULT_FREQ);
+    ui->lcdNumber_7->display((int)FREQ_BW_DEFAULT1);
+    ui->lcdNumber_8->display((int)FREQ_BW_DEFAULT2);
+    ui->lcdNumber_9->display((int)FREQ_BW_DEFAULT3);
+    ui->lcdNumber_10->display((int)FREQ_BW_DEFAULT4);
+    ui->lcdNumber_11->display((int)FREQ_BW_DEFAULT5);
+    ui->lcdNumber_12->display((int)FREQ_BW_DEFAULT6);
 
-    ui->lcdNumber_13->display(DEFAULT_BW);
-    ui->lcdNumber_14->display(DEFAULT_BW);
-    ui->lcdNumber_15->display(DEFAULT_BW);
-    ui->lcdNumber_16->display(DEFAULT_BW);
-    ui->lcdNumber_17->display(DEFAULT_BW);
-    ui->lcdNumber_18->display(DEFAULT_BW);
+    ui->lcdNumber_13->display((int)FREQ_BW_DEFAULT1);
+    ui->lcdNumber_14->display((int)FREQ_BW_DEFAULT2);
+    ui->lcdNumber_15->display((int)FREQ_BW_DEFAULT3);
+    ui->lcdNumber_16->display((int)FREQ_BW_DEFAULT4);
+    ui->lcdNumber_17->display((int)FREQ_BW_DEFAULT5);
+    ui->lcdNumber_18->display((int)FREQ_BW_DEFAULT6);
+
+    dialValue[0] = (int)FREQ_BW_DEFAULT1;
+    dialValue[1] = (int)FREQ_BW_DEFAULT2;
+    dialValue[2] = (int)FREQ_BW_DEFAULT3;
+    dialValue[3] = (int)FREQ_BW_DEFAULT4;
+    dialValue[4] = (int)FREQ_BW_DEFAULT5;
+    dialValue[5] = (int)FREQ_BW_DEFAULT6;
+    dialValue[6] = (int)FREQ_BW_DEFAULT1;
+    dialValue[7] = (int)FREQ_BW_DEFAULT2;
+    dialValue[8] = (int)FREQ_BW_DEFAULT3;
+    dialValue[9] = (int)FREQ_BW_DEFAULT4;
+    dialValue[10] = (int)FREQ_BW_DEFAULT5;
+    dialValue[11] = (int)FREQ_BW_DEFAULT6;
 
     for (int k = 0; k < KNOB_SET * 2; k++)
-    {
-        dialValue[k] = DEFAULT_FREQ;
         previousValue[k] = 0;
-        // TODO: set up actual backend value.
-    }
 
     // Set connection for freq and bandwidth
     connect(ui->dial, SIGNAL(sliderMoved(int)), this,
@@ -367,13 +391,13 @@ int MainApp::knobDirection(int knobNum, int v)
 /**
  * Set knob's LCD number value based on direction turned.
  */
-void MainApp::setKnobLabel(int knobNum, int direction)
+void MainApp::setKnobValue(int knobNum, int direction)
 {
     int dial_v = dialValue[knobNum];
     QString msg = "";
-    if (dial_v >= KNOB_MAX && direction == 1)
+    if (dial_v + KNOB_STEP >= KNOB_MAX && direction == 1)
         msg = "Knob cannot change value because maximum value reached.";
-    else if (dial_v <= KNOB_MIN && direction == -1)
+    else if (dial_v - KNOB_STEP <= KNOB_MIN && direction == -1)
         msg = "Knob cannot change value because minimum value reached.";
 
     // Value cannot be changed, set status bar and exit
@@ -430,15 +454,105 @@ void MainApp::setKnobLabel(int knobNum, int direction)
     if (direction == 1)
     {
         dialValue[knobNum] += KNOB_STEP;
-        // TODO: actually update backend here
         currLCD->display(dialValue[knobNum]);
     }
     else
     {
         dialValue[knobNum] -= KNOB_STEP;
-        // TODO: actually update backend here
         currLCD->display(dialValue[knobNum]);
     }
+
+    if (knobNum < KNOB_SET)
+    {
+        updateFilter(knobNum, gain[knobNum], dialValue[knobNum],
+            dialValue[knobNum + KNOB_SET], false);
+    }
+    else
+    {
+        updateFilter(knobNum - KNOB_SET, gain[knobNum - KNOB_SET],
+            dialValue[knobNum - KNOB_SET], dialValue[knobNum], false);
+    }
+}
+
+/**
+ * A series of functions for each slider's connection.
+ */
+void MainApp::sliderGain1(int value)
+{
+    int gainNum = 0;
+    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
+        return;
+    int cut = false;
+    if (gain[gainNum] >= 0 && value < 0)
+        cut = true;
+    ui->lcdNumber->display(value);
+    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
+        dialValue[gainNum + KNOB_SET], cut);
+}
+
+void MainApp::sliderGain2(int value)
+{
+    int gainNum = 1;
+    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
+        return;
+    int cut = false;
+    if (gain[gainNum] >= 0 && value < 0)
+        cut = true;
+    ui->lcdNumber_2->display(value);
+    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
+        dialValue[gainNum + KNOB_SET], cut);
+}
+
+void MainApp::sliderGain3(int value)
+{
+    int gainNum = 2;
+    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
+        return;
+    int cut = false;
+    if (gain[gainNum] >= 0 && value < 0)
+        cut = true;
+    ui->lcdNumber_3->display(value);
+    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
+        dialValue[gainNum + KNOB_SET], cut);
+}
+
+void MainApp::sliderGain4(int value)
+{
+    int gainNum = 3;
+    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
+        return;
+    int cut = false;
+    if (gain[gainNum] >= 0 && value < 0)
+        cut = true;
+    ui->lcdNumber_4->display(value);
+    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
+        dialValue[gainNum + KNOB_SET], cut);
+}
+
+void MainApp::sliderGain5(int value)
+{
+    int gainNum = 4;
+    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
+        return;
+    int cut = false;
+    if (gain[gainNum] >= 0 && value < 0)
+        cut = true;
+    ui->lcdNumber_5->display(value);
+    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
+        dialValue[gainNum + KNOB_SET], cut);
+}
+
+void MainApp::sliderGain6(int value)
+{
+    int gainNum = 5;
+    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
+        return;
+    int cut = false;
+    if (gain[gainNum] >= 0 && value < 0)
+        cut = true;
+    ui->lcdNumber_6->display(value);
+    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
+        dialValue[gainNum + KNOB_SET], cut);
 }
 
 /**
@@ -447,73 +561,73 @@ void MainApp::setKnobLabel(int knobNum, int direction)
 void MainApp::twistKnob1(int value)
 {
     int direction = knobDirection(0, value);
-    setKnobLabel(0, direction);
+    setKnobValue(0, direction);
 }
 
 void MainApp::twistKnob2(int value)
 {
     int direction = knobDirection(1, value);
-    setKnobLabel(1, direction);
+    setKnobValue(1, direction);
 }
 
 void MainApp::twistKnob3(int value)
 {
     int direction = knobDirection(2, value);
-    setKnobLabel(2, direction);
+    setKnobValue(2, direction);
 }
 
 void MainApp::twistKnob4(int value)
 {
     int direction = knobDirection(3, value);
-    setKnobLabel(3, direction);
+    setKnobValue(3, direction);
 }
 
 void MainApp::twistKnob5(int value)
 {
     int direction = knobDirection(4, value);
-    setKnobLabel(4, direction);
+    setKnobValue(4, direction);
 }
 
 void MainApp::twistKnob6(int value)
 {
     int direction = knobDirection(5, value);
-    setKnobLabel(5, direction);
+    setKnobValue(5, direction);
 }
 
 void MainApp::twistKnob7(int value)
 {
     int direction = knobDirection(6, value);
-    setKnobLabel(6, direction);
+    setKnobValue(6, direction);
 }
 
 void MainApp::twistKnob8(int value)
 {
     int direction = knobDirection(7, value);
-    setKnobLabel(7, direction);
+    setKnobValue(7, direction);
 }
 
 void MainApp::twistKnob9(int value)
 {
     int direction = knobDirection(8, value);
-    setKnobLabel(8, direction);
+    setKnobValue(8, direction);
 }
 
 void MainApp::twistKnob10(int value)
 {
     int direction = knobDirection(9, value);
-    setKnobLabel(9, direction);
+    setKnobValue(9, direction);
 }
 
 void MainApp::twistKnob11(int value)
 {
     int direction = knobDirection(10, value);
-    setKnobLabel(10, direction);
+    setKnobValue(10, direction);
 }
 
 void MainApp::twistKnob12(int value)
 {
     int direction = knobDirection(11, value);
-    setKnobLabel(11, direction);
+    setKnobValue(11, direction);
 }
 
 /**
@@ -603,6 +717,30 @@ void MainApp::on_blockNum_editingFinished()
     ui->statusBar->showMessage(msg, 5000);
 }
 
+/**
+ * This helper function loads the current filter value and update
+ * it accordingly.
+ */
+void MainApp::updateFilter(int filterNum, int newGain, int newFreq,
+    int newBW, bool cut)
+{
+    Filter *currFilter = paramEQ->getCurrentFilter();
+    float freq = (float)newFreq;          // Hz
+    float bandwidth = (float)newBW;       // Hz
+    float gain = (float)newGain;  // dB (must be positive)
+
+    BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
+        malloc(sizeof(BandBoostCutProp));
+    bandBCProp->omegaNought = 2.0 * M_PI * freq;
+    bandBCProp->Q = freq/bandwidth;
+    bandBCProp->K = std::pow(10.0, gain/20.0);
+
+    if ( !cut )
+        filters[filterNum].type = FT_BAND_BOOST;
+    else
+        filters[filterNum].type = FT_BAND_CUT;
+    filters[filterNum].bandBCProp = bandBCProp;
+}
 
 /**
  * This helper function just frees the filter properties for each filter,
