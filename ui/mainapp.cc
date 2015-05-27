@@ -93,6 +93,8 @@ MainApp::MainApp(QWidget *parent) :
     paramEQ = new ParametricEQ(NUM_FILTERS, filters);
 
     ui->setupUi(this);
+
+    // Init front-end stuff in initWindow()
     initWindow();
 }
 
@@ -122,11 +124,11 @@ void MainApp::initWindow()
     // Threads / block and max block adjustables
     ui->threadsBlockBox->setMinimum(32);
     ui->threadsBlockBox->setMaximum(1024);
-    ui->threadsBlockBox->setValue(512);
-    
+    ui->threadsBlockBox->setValue(threadNumPerBlock);
+
     ui->blockNum->setMinimum(1);
     ui->blockNum->setMaximum(400);
-    ui->blockNum->setValue(200);
+    ui->blockNum->setValue(maxNumBlock);
 
     // Set connection for slider and display
     connect(ui->verticalSlider, SIGNAL(valueChanged(int)),
@@ -141,8 +143,55 @@ void MainApp::initWindow()
         ui->lcdNumber_5, SLOT(display(int)));
     connect(ui->verticalSlider_6, SIGNAL(valueChanged(int)),
         ui->lcdNumber_6, SLOT(display(int)));
-}
 
+    // Set default for freq and bandwidth
+    ui->lcdNumber_7->display(DEFAULT_FREQ);
+    ui->lcdNumber_8->display(DEFAULT_FREQ);
+    ui->lcdNumber_9->display(DEFAULT_FREQ);
+    ui->lcdNumber_10->display(DEFAULT_FREQ);
+    ui->lcdNumber_11->display(DEFAULT_FREQ);
+    ui->lcdNumber_12->display(DEFAULT_FREQ);
+
+    ui->lcdNumber_13->display(DEFAULT_BW);
+    ui->lcdNumber_14->display(DEFAULT_BW);
+    ui->lcdNumber_15->display(DEFAULT_BW);
+    ui->lcdNumber_16->display(DEFAULT_BW);
+    ui->lcdNumber_17->display(DEFAULT_BW);
+    ui->lcdNumber_18->display(DEFAULT_BW);
+
+    for (int k = 0; k < KNOB_SET * 2; k++)
+    {
+        dialValue[k] = DEFAULT_FREQ;
+        previousValue[k] = 0;
+        // TODO: set up actual backend value.
+    }
+
+    // Set connection for freq and bandwidth
+    connect(ui->dial, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob1(int)));
+    connect(ui->dial_2, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob2(int)));
+    connect(ui->dial_3, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob3(int)));
+    connect(ui->dial_4, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob4(int)));
+    connect(ui->dial_5, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob5(int)));
+    connect(ui->dial_6, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob6(int)));
+    connect(ui->dial_7, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob7(int)));
+    connect(ui->dial_8, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob8(int)));
+    connect(ui->dial_9, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob9(int)));
+    connect(ui->dial_10, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob10(int)));
+    connect(ui->dial_11, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob11(int)));
+    connect(ui->dial_12, SIGNAL(sliderMoved(int)), this,
+        SLOT(twistKnob12(int)));
+}
 
 /**
  * This helper function calculates a time string from a time (which
@@ -180,7 +229,6 @@ QString MainApp::calculateTimeString(int time)
 
     return timeStr;
 }
-
 
 /**
  * This function updates the "time" string based on how much of the given
@@ -277,6 +325,196 @@ void MainApp::initiateProcessing()
     processing = false;
 }
 
+/**
+ * Helper function to return the direction turned for a knob.
+ */
+int MainApp::knobDirection(int knobNum, int v)
+{
+    int DIRECTION_CLOCKWISE = 1;
+    int DIRECTION_ANTICLOCKWISE = -1;
+    int difference = previousValue[knobNum] - v;
+    int direction = 0;
+
+    // Make sure we have not reached the start.
+    if (v == 0)
+    {
+        if (previousValue[knobNum] == 100)
+            direction = DIRECTION_CLOCKWISE;
+        else
+            direction = DIRECTION_ANTICLOCKWISE;
+    }
+    else if (v == 100) 
+    {
+        if (previousValue[knobNum] == 0)
+            direction = DIRECTION_ANTICLOCKWISE;
+        else
+            direction = DIRECTION_CLOCKWISE;
+    }
+    else
+    {
+        if (difference > 0)
+            direction = DIRECTION_ANTICLOCKWISE;
+        else if (difference  < 0)
+            direction = DIRECTION_CLOCKWISE;
+    }
+
+    // Store the previous value
+    previousValue[knobNum] = v;
+
+    return direction;
+}
+
+/**
+ * Set knob's LCD number value based on direction turned.
+ */
+void MainApp::setKnobLabel(int knobNum, int direction)
+{
+    int dial_v = dialValue[knobNum];
+    QString msg = "";
+    if (dial_v >= KNOB_MAX && direction == 1)
+        msg = "Knob cannot change value because maximum value reached.";
+    else if (dial_v <= KNOB_MIN && direction == -1)
+        msg = "Knob cannot change value because minimum value reached.";
+
+    // Value cannot be changed, set status bar and exit
+    if ( !msg.isEmpty() )
+    {
+        ui->statusBar->showMessage(msg, 5000);
+        return;
+    }
+
+    // Find the right label to update
+    QLCDNumber *currLCD;
+    switch(knobNum)
+    {
+        case 0:
+            currLCD = ui->lcdNumber_7;
+            break;
+        case 1:
+            currLCD = ui->lcdNumber_8;
+            break;
+        case 2:
+            currLCD = ui->lcdNumber_9;
+            break;
+        case 3:
+            currLCD = ui->lcdNumber_10;
+            break;
+        case 4:
+            currLCD = ui->lcdNumber_11;
+            break;
+        case 5:
+            currLCD = ui->lcdNumber_12;
+            break;
+        case 6:
+            currLCD = ui->lcdNumber_13;
+            break;
+        case 7:
+            currLCD = ui->lcdNumber_14;
+            break;
+        case 8:
+            currLCD = ui->lcdNumber_15;
+            break;
+        case 9:
+            currLCD = ui->lcdNumber_16;
+            break;
+        case 10:
+            currLCD = ui->lcdNumber_17;
+            break;
+        case 11:
+            currLCD = ui->lcdNumber_18;
+            break;
+        default:
+            currLCD = ui->lcdNumber_7;
+    }
+
+    if (direction == 1)
+    {
+        dialValue[knobNum] += KNOB_STEP;
+        // TODO: actually update backend here
+        currLCD->display(dialValue[knobNum]);
+    }
+    else
+    {
+        dialValue[knobNum] -= KNOB_STEP;
+        // TODO: actually update backend here
+        currLCD->display(dialValue[knobNum]);
+    }
+}
+
+/**
+ * A series of functions for each knob's connection.
+ */
+void MainApp::twistKnob1(int value)
+{
+    int direction = knobDirection(0, value);
+    setKnobLabel(0, direction);
+}
+
+void MainApp::twistKnob2(int value)
+{
+    int direction = knobDirection(1, value);
+    setKnobLabel(1, direction);
+}
+
+void MainApp::twistKnob3(int value)
+{
+    int direction = knobDirection(2, value);
+    setKnobLabel(2, direction);
+}
+
+void MainApp::twistKnob4(int value)
+{
+    int direction = knobDirection(3, value);
+    setKnobLabel(3, direction);
+}
+
+void MainApp::twistKnob5(int value)
+{
+    int direction = knobDirection(4, value);
+    setKnobLabel(4, direction);
+}
+
+void MainApp::twistKnob6(int value)
+{
+    int direction = knobDirection(5, value);
+    setKnobLabel(5, direction);
+}
+
+void MainApp::twistKnob7(int value)
+{
+    int direction = knobDirection(6, value);
+    setKnobLabel(6, direction);
+}
+
+void MainApp::twistKnob8(int value)
+{
+    int direction = knobDirection(7, value);
+    setKnobLabel(7, direction);
+}
+
+void MainApp::twistKnob9(int value)
+{
+    int direction = knobDirection(8, value);
+    setKnobLabel(8, direction);
+}
+
+void MainApp::twistKnob10(int value)
+{
+    int direction = knobDirection(9, value);
+    setKnobLabel(9, direction);
+}
+
+void MainApp::twistKnob11(int value)
+{
+    int direction = knobDirection(10, value);
+    setKnobLabel(10, direction);
+}
+
+void MainApp::twistKnob12(int value)
+{
+    int direction = knobDirection(11, value);
+    setKnobLabel(11, direction);
+}
 
 /**
  * This function responds to the "Process"/"Stop" button being pressed.
@@ -328,7 +566,7 @@ void MainApp::on_threadsBlockBox_editingFinished()
     {
         paramEQ->setThreadsPerBlock(newThreadsBlock);
     }
-    catch (std::exception e)
+    catch (std::logic_error e)
     {
         ui->statusBar->showMessage(e.what(), 5000);
         cout << e.what() << endl;
@@ -341,6 +579,8 @@ void MainApp::on_threadsBlockBox_editingFinished()
     cout << msg.toLocal8Bit().data() << endl;
     ui->statusBar->showMessage(msg, 5000);
 }
+
+
 
 void MainApp::on_blockNum_editingFinished()
 {
