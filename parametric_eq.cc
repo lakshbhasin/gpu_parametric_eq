@@ -514,6 +514,8 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
             gpuFFTChk( cufftExecR2C(forwardPlans[ch],
                                 &devInputAudioBuf[ch * numBufSamples],
                                 &devFFTAudioBuf[ch * numEntriesPerFFT]) );
+            
+            gpuFFTChk( cufftDestroy(forwardPlans[ch]) );
 
             // Process this channel's buffer. This involves pointwise
             // multiplication by the transfer function, as well as dividing
@@ -538,6 +540,8 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
             gpuFFTChk( cufftExecC2R(inversePlans[ch],
                             &devFFTAudioBuf[ch * numEntriesPerFFT],
                             &devUnclippedAudioBuf[ch * numBufSamples]));
+
+            gpuFFTChk( cufftDestroy(inversePlans[ch]) );
 
             // Carry out clipping on this channel's output buffer, and
             // store the clipped result in the appropriate location in
@@ -746,6 +750,9 @@ void ParametricEQ::playAudio(const boost::system::error_code &e,
         // If we're done playing the whole song now, signal that we've
         // "paused" playing.
         playAudioPaused = true;
+
+        // Free the playTimer since it was allocated in a different scope.
+        delete playTimer;
     }
 
 }
