@@ -4,5 +4,6 @@
 *.o
 *.pro.user
 moc_mainapp.cpp
+moc_qcustomplot.cpp
 ui_mainapp.h
 

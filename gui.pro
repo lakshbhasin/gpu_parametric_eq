@@ -14,7 +14,7 @@ MOC_DIR = ./ui
 QMAKE_CXXFLAGS_RELEASE  -= -O2
 QMAKE_CXXFLAGS_RELEASE  += -O3 #-DNDEBUG
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 TEMPLATE = app
 TARGET = gui
 
@@ -29,9 +29,9 @@ CUDA_DIR = "/opt/cuda"            # Path to cuda toolkit install
 
 # Input
 HEADERS += parametric_eq.hh parametric_eq_cuda.cuh eq_stream.hh \
-           WavData.hh ui/mainapp.hh
+           WavData.hh ui/mainapp.hh ui/qcustomplot.hh
 SOURCES += main.cc parametric_eq.cc eq_stream.cc WavData.cc \
-           ui/mainapp.cc
+           ui/mainapp.cc ui/qcustomplot.cc
 
 # DO NOT EDIT BEYOND THIS UNLESS YOU KNOW WHAT YOU ARE DOING....
 
