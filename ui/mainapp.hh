@@ -27,12 +27,18 @@
 #define KNOB_MAX 22000
 
 /* Default value for Freq, BW, and gain. */
-#define FREQ_BW_DEFAULT1 64.0
-#define FREQ_BW_DEFAULT2 128.0
-#define FREQ_BW_DEFAULT3 256.0
-#define FREQ_BW_DEFAULT4 512.0
-#define FREQ_BW_DEFAULT5 1024.0
-#define FREQ_BW_DEFAULT6 2048.0
+#define FREQ_DEFAULT1 64.0
+#define FREQ_DEFAULT2 128.0
+#define FREQ_DEFAULT3 256.0
+#define FREQ_DEFAULT4 512.0
+#define FREQ_DEFAULT5 1024.0
+#define FREQ_DEFAULT6 2048.0
+#define BW_DEFAULT1 64.0
+#define BW_DEFAULT2 128.0
+#define BW_DEFAULT3 256.0
+#define BW_DEFAULT4 512.0
+#define BW_DEFAULT5 1024.0
+#define BW_DEFAULT6 2048.0
 #define GAIN_DEFAULT1 0.0
 #define GAIN_DEFAULT2 0.0
 #define GAIN_DEFAULT3 20.0
@@ -148,11 +154,12 @@ private:
     // Keep track of current gain values
     int gain[KNOB_SET];
 
-    void initWindow();
     QString calculateTimeString(int time);
     void setTimeString();
-    int knobDirection(int knobNum, int v);
+    void initBoundDial(QDial *currDial, int idx);
+    void initDials();
     void setKnobValue(int knobNum, int direction);
+    void initWindow();
     void freeFilterProperties();
     void initiateProcessing();
     void updateFilter(int filterNum, int newGain, int newFreq,
