@@ -141,7 +141,10 @@ private:
     // Timer to query the samples played by the
     // equalizer.
     QTimer *timer;
-    QTimer *dataTimer;
+
+    // Timers for data plotting.
+    QTimer *plotTimer;
+    QTimer *elapseTimer;
 
     int threadNumPerBlock = 512;
     int maxNumBlock = 200;

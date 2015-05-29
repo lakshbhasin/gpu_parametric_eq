@@ -198,15 +198,11 @@ void MainApp::initPlot()
         ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
     connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)),
         ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
-    dataTimer = new QTimer(this);
-    connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
-    dataTimer->start(0);
 }
 
 void MainApp::realtimeDataSlot()
 {
-    double timeValue = QDateTime::currentDateTime().toMSecsSinceEpoch() \
-        / 1000.0;
+    double timeValue = duration - elapseTimer->remainingTime() / 1000.0;
     static double lastPointKey = 0;
     if (timeValue - lastPointKey > 0.01)
     {
@@ -673,6 +669,13 @@ void MainApp::on_processButton_clicked()
         connect(timer, SIGNAL(timeout()), this, SLOT(updatePosition()));
         // Timer to query the samples played every half second.
         timer->start(500);
+
+        // Start plotting
+        plotTimer = new QTimer(this);
+        elapseTimer = new QTimer(this);
+        elapseTimer->start(duration * 1000.0);
+        connect(plotTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+        plotTimer->start(0);
     }
     
 }
