@@ -1206,7 +1206,7 @@ p, li { white-space: pre-wrap; }
    <zorder>dial_10</zorder>
    <zorder>dial_11</zorder>
    <zorder>dial_12</zorder>
-   <zorder>widget</zorder>
+   <zorder>customPlot</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
