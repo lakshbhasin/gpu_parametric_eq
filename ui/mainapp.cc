@@ -673,10 +673,12 @@ void MainApp::on_blockNum_editingFinished()
 void MainApp::updateFilter(int filterNum, int newGain, int newFreq,
     int newBW, bool cut)
 {
+    /*
+    // Use current filters to retrieve current info
     Filter *currFilter = paramEQ->getCurrentFilter();
-    float freq = (float)newFreq;          // Hz
-    float bandwidth = (float)newBW;       // Hz
-    float gain = (float)newGain;  // dB (must be positive)
+    float freq = (float)newFreq;         // Hz
+    float bandwidth = (float)newBW;      // Hz
+    float gain = std::abs((float)newGain); // dB (must be positive)
 
     BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
@@ -689,7 +691,39 @@ void MainApp::updateFilter(int filterNum, int newGain, int newFreq,
     else
         filters[filterNum].type = FT_BAND_CUT;
     filters[filterNum].bandBCProp = bandBCProp;
-    paramEQ->setFilters(filters);
+    */
+    // Make a new copy of the updated filters
+    Filter *newFilters = (Filter *) malloc(KNOB_SET * sizeof(Filter));
+    for (int k = 0; k < KNOB_SET; k++)
+    {
+        if (k != filterNum)
+        {
+            newFilters[k].type = FT_BAND_BOOST;
+            BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
+                malloc(sizeof(BandBoostCutProp));
+            bandBCProp->omegaNought = 2.0 * M_PI * (float)dialValue[k];
+            bandBCProp->Q = (float)dialValue[k] / (float)dialValue[k + KNOB_SET];
+            bandBCProp->K = std::pow(10.0, (float)gain[k] / 20.0);
+            newFilters[k].bandBCProp = bandBCProp;
+        }
+        else
+        {
+            float freq = (float)newFreq;           // Hz
+            float bandwidth = (float)newBW;        // Hz
+            float gain = std::abs((float)newGain); // dB (must be positive)
+            BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
+                malloc(sizeof(BandBoostCutProp));
+            bandBCProp->omegaNought = 2.0 * M_PI * freq;
+            bandBCProp->Q = freq / bandwidth;
+            bandBCProp->K = std::pow(10.0, gain / 20.0);
+            if ( !cut )
+                newFilters[filterNum].type = FT_BAND_BOOST;
+            else
+                newFilters[filterNum].type = FT_BAND_CUT;
+            newFilters[filterNum].bandBCProp = bandBCProp;
+        }
+    }
+    paramEQ->setFilters(newFilters);
 }
 
 /**

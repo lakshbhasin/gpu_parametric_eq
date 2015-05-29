@@ -21,11 +21,6 @@
 #include "ui_mainapp.h"
 #include "parametric_eq.hh"
 
-/* Min and max for knob values. */
-#define KNOB_SET 6
-#define KNOB_MIN 0
-#define KNOB_MAX 22000
-
 /* Default value for Freq, BW, and gain. */
 #define FREQ_DEFAULT1 64.0
 #define FREQ_DEFAULT2 128.0
@@ -47,7 +42,9 @@
 #define GAIN_DEFAULT6 0.0
 
 /* How much change for each twist in knob. */
-#define KNOB_STEP 10
+#define KNOB_SET 6
+#define KNOB_MIN 10 // Should be > 0
+#define KNOB_MAX 22000
 #define GAIN_MAX 30
 #define GAIN_MIN -30
 
@@ -147,9 +144,6 @@ private:
 
     // Keep track of current freq and bw values
     int dialValue[KNOB_SET * 2];
-
-    // This is necessary for QDial to be twisted
-    int previousValue[KNOB_SET * 2];
 
     // Keep track of current gain values
     int gain[KNOB_SET];
