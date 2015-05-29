@@ -177,6 +177,53 @@ void MainApp::initDials()
         SLOT(twistKnob12(int)));
 }
 
+void MainApp::initPlot()
+{
+    ui->customPlot->addGraph();
+    ui->customPlot->graph(0)->setPen(QPen(Qt::blue));
+    ui->customPlot->graph(0)->setBrush(QBrush(QColor(240, 255, 200)));
+    ui->customPlot->graph(0)->setAntialiasedFill(false);
+    ui->customPlot->addGraph();
+    ui->customPlot->graph(1)->setPen(QPen(Qt::blue));
+    ui->customPlot->graph(1)->setLineStyle(QCPGraph::lsNone);
+    ui->customPlot->graph(1)->setScatterStyle(QCPScatterStyle::ssDisc);
+
+    ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
+    ui->customPlot->xAxis->setDateTimeFormat("mm:ss");
+    ui->customPlot->xAxis->setAutoTickStep(false);
+    ui->customPlot->xAxis->setTickStep(2);
+    ui->customPlot->axisRect()->setupFullAxesBox();
+
+    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)),
+        ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)),
+        ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
+    dataTimer = new QTimer(this);
+    connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    dataTimer->start(0);
+}
+
+void MainApp::realtimeDataSlot()
+{
+    double timeValue = QDateTime::currentDateTime().toMSecsSinceEpoch() \
+        / 1000.0;
+    static double lastPointKey = 0;
+    if (timeValue - lastPointKey > 0.01)
+    {
+        // TODO: Superposition of gain values.
+        double value0 = qSin((float)gain[0]) * 10.0;
+        ui->customPlot->graph(0)->addData(timeValue, value0);
+        ui->customPlot->graph(1)->clearData();
+        ui->customPlot->graph(1)->addData(timeValue, value0);
+        ui->customPlot->graph(0)->removeDataBefore(timeValue - 8);
+        ui->customPlot->graph(0)->rescaleValueAxis();
+        //ui->customPlot->yAxis->setRange(0.1, 10);
+        lastPointKey = timeValue;
+    }
+    ui->customPlot->xAxis->setRange(timeValue + 0.25, 8, Qt::AlignRight);
+    ui->customPlot->replot();
+}
+
 /**
  * This function initializes the window and sets some of its properties.
  */
@@ -238,6 +285,8 @@ void MainApp::initWindow()
     gain[5] = (int)GAIN_DEFAULT6;
 
     initDials();
+
+    initPlot();
 }
 
 /**
@@ -447,6 +496,7 @@ void MainApp::sliderGain1(int value)
     if (gain[gainNum] >= 0 && value < 0)
         cut = true;
     ui->lcdNumber->display(value);
+    gain[0] = value;
     updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
         dialValue[gainNum + KNOB_SET], cut);
 }
@@ -460,6 +510,7 @@ void MainApp::sliderGain2(int value)
     if (gain[gainNum] >= 0 && value < 0)
         cut = true;
     ui->lcdNumber_2->display(value);
+    gain[1] = value;
     updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
         dialValue[gainNum + KNOB_SET], cut);
 }
@@ -473,6 +524,7 @@ void MainApp::sliderGain3(int value)
     if (gain[gainNum] >= 0 && value < 0)
         cut = true;
     ui->lcdNumber_3->display(value);
+    gain[2] = value;
     updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
         dialValue[gainNum + KNOB_SET], cut);
 }
@@ -486,6 +538,7 @@ void MainApp::sliderGain4(int value)
     if (gain[gainNum] >= 0 && value < 0)
         cut = true;
     ui->lcdNumber_4->display(value);
+    gain[3] = value;
     updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
         dialValue[gainNum + KNOB_SET], cut);
 }
@@ -499,6 +552,7 @@ void MainApp::sliderGain5(int value)
     if (gain[gainNum] >= 0 && value < 0)
         cut = true;
     ui->lcdNumber_5->display(value);
+    gain[4] = value;
     updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
         dialValue[gainNum + KNOB_SET], cut);
 }
@@ -512,6 +566,7 @@ void MainApp::sliderGain6(int value)
     if (gain[gainNum] >= 0 && value < 0)
         cut = true;
     ui->lcdNumber_6->display(value);
+    gain[5] = value;
     updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
         dialValue[gainNum + KNOB_SET], cut);
 }

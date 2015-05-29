@@ -111,6 +111,9 @@ private slots:
     void twistKnob11(int value);
 
     void twistKnob12(int value);
+
+    void realtimeDataSlot();
+
 private:
 
     // The internal ParametricEQ to use. 
@@ -138,6 +141,7 @@ private:
     // Timer to query the samples played by the
     // equalizer.
     QTimer *timer;
+    QTimer *dataTimer;
 
     int threadNumPerBlock = 512;
     int maxNumBlock = 200;
@@ -152,6 +156,7 @@ private:
     void setTimeString();
     void initBoundDial(QDial *currDial, int idx);
     void initDials();
+    void initPlot();
     void setKnobValue(int knobNum, int direction);
     void initWindow();
     void freeFilterProperties();
