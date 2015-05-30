@@ -175,6 +175,7 @@ private:
 
     // Set up real-time data plotting.
     void initPlot();
+    void initDeviceMeta();
     void initWindow();
     void freeFilterProperties();
     void initiateProcessing();
