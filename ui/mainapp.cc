@@ -287,6 +287,57 @@ void MainApp::initWindow()
     initDials();
 
     initPlot();
+
+    initDeviceMeta();
+}
+
+void MainApp::initDeviceMeta()
+{
+    // Find device name
+    int nDevices;
+    cudaGetDeviceCount(&nDevices);
+    if (nDevices == 0)
+    {
+        ui->statusBar->showMessage("No CUDA-able device!", 5000);
+        return;
+    }
+    QString deviceName;
+    cudaDeviceProp prop;
+    for (int i = 0; i < nDevices; i++)
+    {
+        cudaGetDeviceProperties(&prop, i);
+        deviceName = prop.name;
+        break;
+    }
+    deviceName = "Nvidia " + deviceName;
+
+    // Find architecture type
+    QString arch;
+    int majorCap = prop.major;
+    if (majorCap < 2)
+        arch = "Tesla";
+    else if (majorCap >= 2 && majorCap < 3)
+        arch = "Fermi";
+    else
+        arch = "Kepler";
+
+    arch = "Architecture: " + arch;
+
+    // Get CC
+    QString cc = QString::number(prop.major) + "." +
+        QString::number(prop.minor);
+    cc = "CC: " + cc;
+
+    // Get CUDA version
+    int versionInt;
+    cudaDriverGetVersion(&versionInt);
+    double cudaVersion = (double)versionInt / 1000.0;
+    QString version = "CUDA Version: " + QString::number(cudaVersion);
+
+    QString metaInfo = deviceName + "\n" + arch + "\n" + cc +
+        "\n" + version;
+
+    ui->textBrowser->setText(metaInfo);
 }
 
 /**
