@@ -306,6 +306,7 @@ void MainApp::initDeviceMeta()
         deviceName = prop.name;
         break;
     }
+
     deviceName = "NVidia " + deviceName;
 
     // Find architecture type
