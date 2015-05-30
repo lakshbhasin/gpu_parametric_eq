@@ -34,7 +34,6 @@ MainApp::MainApp(QWidget *parent) :
     filters[1].bandBCProp = bandBCProp2;
     
     // The third filter will initially be at 256 Hz.
-    // TODO: change this back so it has no gain.
     float freq3 = FREQ_DEFAULT3;
     float bandwidth3 = BW_DEFAULT3;
     float gain3 = GAIN_DEFAULT3;
@@ -160,46 +159,250 @@ void MainApp::initDials()
 void MainApp::initPlot()
 {
     ui->customPlot->addGraph();
-    ui->customPlot->graph(0)->setPen(QPen(Qt::blue));
-    ui->customPlot->graph(0)->setBrush(QBrush(QColor(240, 255, 200)));
-    ui->customPlot->graph(0)->setAntialiasedFill(false);
-    ui->customPlot->addGraph();
-    ui->customPlot->graph(1)->setPen(QPen(Qt::blue));
-    ui->customPlot->graph(1)->setLineStyle(QCPGraph::lsNone);
-    ui->customPlot->graph(1)->setScatterStyle(QCPScatterStyle::ssDisc);
 
-    ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
-    ui->customPlot->xAxis->setDateTimeFormat("mm:ss");
-    ui->customPlot->xAxis->setAutoTickStep(false);
-    ui->customPlot->xAxis->setTickStep(2);
+    /* Begin color/font configuration */
+    
+    // The background and plotting rectangle's colors
+    ui->customPlot->setBackground(QColor(13, 29, 39));
+    ui->customPlot->axisRect()->setBackground(QColor(13, 29, 39));
+    
+    // The color of the lines themselves
+    ui->customPlot->graph(0)->setPen(QPen(QColor(214, 221, 225)));
+
+    // The color of the fill used for the graph. The alpha makes this
+    // fairly transparent.
+    ui->customPlot->graph(0)->setBrush(QBrush(QColor(214, 221, 225, 20)));
+    ui->customPlot->graph(0)->setAntialiasedFill(false);
+
+    // Add a dummy graph so we can fill down to very negative values. This
+    // dummy graph should be plotted at the lowest possible superposition
+    // of gains, with some vertical spacing added.
+    ui->customPlot->addGraph();
+
+    double minFreq = QCustomDial::minFrequency() * MIN_FREQ_SPACE_FACTOR;
+    double maxFreq = QCustomDial::maxFrequency() * MAX_FREQ_SPACE_FACTOR;
+    double lowestYVal = GAIN_MIN * NUM_FILTERS - 10;
+
+    ui->customPlot->graph(1)->addData(minFreq, lowestYVal);
+    ui->customPlot->graph(1)->addData(maxFreq, lowestYVal);
+    
+    ui->customPlot->graph(0)->setChannelFillGraph(
+            ui->customPlot->graph(1));
+
+    // The color/fonts of the labels and tick labels
+    QColor labelColor(101, 120, 133);
+    QFont labelFont("Arial", 10);
+    QFont tickLabelFont("Arial", 8);
+
+    ui->customPlot->xAxis->setLabelColor(labelColor);
+    ui->customPlot->xAxis->setLabelFont(labelFont);
+    ui->customPlot->yAxis->setLabelColor(labelColor);
+    ui->customPlot->yAxis->setLabelFont(labelFont);
+    ui->customPlot->xAxis->setTickLabelColor(labelColor);
+    ui->customPlot->xAxis->setTickLabelFont(tickLabelFont);
+    ui->customPlot->yAxis->setTickLabelColor(labelColor);
+    ui->customPlot->yAxis->setTickLabelFont(tickLabelFont);
+
+    // The color of axis lines, including their ticks and subticks.
+    QColor axisColor(62, 80, 93);
+    QPen axisPen(axisColor);
+    
+    ui->customPlot->xAxis->setBasePen(axisPen);
+    ui->customPlot->yAxis->setBasePen(axisPen);
+    ui->customPlot->xAxis2->setBasePen(axisPen);
+    ui->customPlot->yAxis2->setBasePen(axisPen);
+    ui->customPlot->xAxis->setTickPen(axisPen);
+    ui->customPlot->yAxis->setTickPen(axisPen);
+    ui->customPlot->xAxis2->setTickPen(axisPen);
+    ui->customPlot->yAxis2->setTickPen(axisPen);
+    ui->customPlot->xAxis->setSubTickPen(axisPen);
+    ui->customPlot->yAxis->setSubTickPen(axisPen);
+    ui->customPlot->xAxis2->setSubTickPen(axisPen);
+    ui->customPlot->yAxis2->setSubTickPen(axisPen);
+
+    // The color of subgrid and regular grid lines.
+    QColor gridColor(70, 100, 118, 40);     // alpha included for transp.
+    QPen gridPen(gridColor);
+    
+    ui->customPlot->xAxis->grid()->setPen(gridPen);
+    ui->customPlot->yAxis->grid()->setPen(gridPen);
+    ui->customPlot->xAxis->grid()->setSubGridPen(gridPen);
+    ui->customPlot->yAxis->grid()->setSubGridPen(gridPen);
+    
+    // The color of the zero line
+    ui->customPlot->yAxis->grid()->setZeroLinePen(QPen(Qt::transparent));
+
+    /* End color configuration */
+
+    /* Begin axis configuration */
+
+    ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltNumber);
+    ui->customPlot->yAxis->setTickLabelType(QCPAxis::ltNumber);
+
+    ui->customPlot->yAxis->grid()->setSubGridVisible(true);
+    ui->customPlot->yAxis->setAutoSubTicks(false); 
+    ui->customPlot->yAxis->setSubTickCount(1);
+    ui->customPlot->xAxis->grid()->setSubGridVisible(true);
+    ui->customPlot->yAxis->setAutoSubTicks(false);  
+    ui->customPlot->xAxis->setSubTickCount(4);
+    
+    // Axis labels
+    ui->customPlot->xAxis->setLabel("Frequency (Hz)");
+    ui->customPlot->yAxis->setLabel("Gain (dB)");
+
+    // Make the x-axis logarithmic
+    ui->customPlot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+    ui->customPlot->xAxis->setScaleLogBase(QCustomDial::LOG_BASE);
+
+    // Let the x-axis cover the entire possible frequency range (based on
+    // the knobs). Leave some padding for labels.
+    ui->customPlot->xAxis->setRange(minFreq, maxFreq);
+    
+    /* End axis configuration */
+    
+    // Disable all interactions.
+    ui->customPlot->setInteractions(0);
+
+    // Copy over some properties to xAxis2 and yAxis2    
     ui->customPlot->axisRect()->setupFullAxesBox();
 
-    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)),
-        ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
-    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)),
-        ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
+    plotInitialized = true;
+
+    // Plot the initial transfer function
+    updatePlot();
 }
 
-void MainApp::realtimeDataSlot()
+void MainApp::updatePlot()
 {
-    /*
-    double timeValue = duration - elapseTimer->remainingTime() / 1000.0;
-    static double lastPointKey = 0;
-    if (timeValue - lastPointKey > 0.01)
+    // Frequency and gain vectors. The frequencies will be logarithmically
+    // spaced, with the same spacing as specified in QCustomDial.
+    int numPts = QCustomDial::KNOB_MAX - QCustomDial::KNOB_MIN;
+    
+    QVector<double> freqs(numPts);           // Hz
+    QVector<double> gainsDB(numPts);         // dB
+
+    // Keep track of the minimum and maximum gains (in dB). Initialize
+    // these to twice GAIN_MIN and GAIN_MAX respectively, so that there's
+    // some extra space in our plot in the "normal case".
+    double gainsDBMin = GAIN_MIN * 2.0;
+    double gainsDBMax = GAIN_MAX * 2.0;
+
+    // For each point, take the "superposition" (i.e. multiplication) of
+    // the transfer functions, and then take the absolute value to get the
+    // gain.
+    for (int i = 0; i < numPts; i++)
     {
-        // TODO: Superposition of gain values.
-        double value0 = qSin((float)gain[0]) * 10.0;
-        ui->customPlot->graph(0)->addData(timeValue, value0);
-        ui->customPlot->graph(1)->clearData();
-        ui->customPlot->graph(1)->addData(timeValue, value0);
-        ui->customPlot->graph(0)->removeDataBefore(timeValue - 8);
-        ui->customPlot->graph(0)->rescaleValueAxis();
-        //ui->customPlot->yAxis->setRange(0.1, 10);
-        lastPointKey = timeValue;
+        // Frequency = FREQ_MULT * LOG_BASE^(i / EXP_DIV). Don't round in
+        // this case.
+        int thisFreq = QCustomDial::FREQ_MULT * 
+            std::pow(QCustomDial::LOG_BASE, i / QCustomDial::EXP_DIV);
+
+        // For the first and last points, use the endpoints of the graphing
+        // region.
+        if (i == 0)
+        {
+            thisFreq *= MIN_FREQ_SPACE_FACTOR;
+        }
+        else if (i == numPts - 1)
+        {
+            thisFreq *= MAX_FREQ_SPACE_FACTOR;
+        }
+
+        freqs[i] = thisFreq;
+
+        // The Laplace-transform variable for this frequency.
+        std::complex<double> s(0.0, 2.0 * M_PI * thisFreq);
+
+        // The complex transfer function value at this frequency (a
+        // multiplication of all the individual transfer functions).
+        std::complex<double> output(1.0, 0.0);
+
+        for (int filtNum = 0; filtNum < NUM_FILTERS; filtNum ++)
+        {
+            Filter thisFilter = filters[filtNum];
+            FilterType thisFilterType = thisFilter.type;
+            
+            std::complex<double> sSq;
+            double omegaNought, Q, K, omegaNoughtOvQ, omegaNoughtSq;
+            
+            switch (thisFilterType)
+            {
+                case FT_BAND_BOOST:
+                case FT_BAND_CUT:
+                {
+                    // For boosts, use the transfer function: 
+                    //
+                    // H(s) = (s^2 + K * omegaNought/Q * s + omegaNought^2)
+                    //        / (s^2 + omegaNought/Q * s + omegaNought^2)
+                    // 
+                    // And use the reciprocal of this for cuts.
+                    
+                    omegaNought = (double) thisFilter.bandBCProp->omegaNought;
+                    Q = (double) thisFilter.bandBCProp->Q;
+                    K = (double) thisFilter.bandBCProp->K;
+                    
+                    // Do some precomputation
+                    sSq = s * s;
+                    omegaNoughtOvQ = omegaNought / Q;
+                    omegaNoughtSq = omegaNought * omegaNought;
+                    
+                    // The numerator and denominator of the above H(s) for
+                    // boosts.
+                    std::complex<double> numerBoost = sSq + 
+                        K * omegaNoughtOvQ * s + omegaNoughtSq;
+                    std::complex<double> denomBoost = sSq + 
+                        omegaNoughtOvQ * s + omegaNoughtSq;
+                    
+                    // If this is a boost, then just add numerBoost /
+                    // denomBoost to the output element. Otherwise, if it's
+                    // a cut, add the reciprocal of this.
+                    std::complex<double> quot;
+                    
+                    if (thisFilterType == FT_BAND_BOOST)
+                    {
+                        quot = numerBoost / denomBoost;
+                    }
+                    else
+                    {
+                        quot = denomBoost / numerBoost;
+                    }
+                    
+                    // Multiply the previous transfer function by this one.
+                    output *= quot;
+
+                    break;
+                }
+                
+                default:
+                    throw std::invalid_argument("Unknown filter type: " + 
+                            std::to_string(thisFilterType));
+            }
+        }
+
+        // Get the gain and store it in dB.
+        double thisGain = std::abs(output);
+        double thisGainDB = 20.0 * std::log10(thisGain);
+        
+        gainsDB[i] = thisGainDB;
+
+        gainsDBMin = std::min(thisGainDB, gainsDBMin);
+        gainsDBMax = std::max(thisGainDB, gainsDBMax);
     }
-    ui->customPlot->xAxis->setRange(timeValue + 0.25, 8, Qt::AlignRight);
+    
+    // Graph gain as a function of frequency
+    ui->customPlot->graph(0)->setData(freqs, gainsDB);
+        
+    // Set the y-axis scale based on the min and max found earlier (which
+    // might extend beyond the data in the "normal" case). Note that we
+    // always want the range to be symmetric, and we give a few dB of
+    // padding space.
+    double halfRange = std::max(std::abs(gainsDBMin),
+                                std::abs(gainsDBMax)) + 2.0;
+
+    ui->customPlot->yAxis->setRange(-halfRange, halfRange);
+    ui->customPlot->yAxis2->setRange(-halfRange, halfRange);
+
     ui->customPlot->replot();
-    */
 }
 
 /**
@@ -213,7 +416,7 @@ void MainApp::initWindow()
     // Set window name
     QMainWindow::setWindowTitle("GPU EQ");
     QMainWindow::setFixedWidth(1020);
-    QMainWindow::setFixedHeight(510);
+    QMainWindow::setFixedHeight(540);
     ui->label->setAlignment(Qt::AlignRight);
 
     // Find gui path for logo
@@ -874,9 +1077,15 @@ void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
             throw std::invalid_argument("Invalid new filter type: " +
                     std::to_string(filtType));
     }
-    
+
     // Have the ParametricEQ signal an update.
     paramEQ->setFilters(filters);
+
+    // Update the plot
+    if (plotInitialized)
+    {
+        updatePlot();
+    }
 }
 
 

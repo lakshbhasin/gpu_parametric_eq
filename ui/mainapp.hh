@@ -3,7 +3,9 @@
 
 /* Standard includes */
 #define _USE_MATH_DEFINES
+#include <algorithm>
 #include <cmath>
+#include <complex>
 #include <cstdint>
 
 /* Qt includes */
@@ -45,15 +47,21 @@
 #define BW_DEFAULT6 1024.0
 #define GAIN_DEFAULT1 0.0
 #define GAIN_DEFAULT2 0.0
-#define GAIN_DEFAULT3 12.0
+#define GAIN_DEFAULT3 0.0
 #define GAIN_DEFAULT4 0.0
 #define GAIN_DEFAULT5 0.0
 #define GAIN_DEFAULT6 0.0
+
+/* Spacing factors for the frequency axis on the plot. */
+#define MIN_FREQ_SPACE_FACTOR   0.95
+#define MAX_FREQ_SPACE_FACTOR   1.05
+
 
 namespace Ui
 {
     class MainApp;
 }
+
 
 class MainApp : public QMainWindow
 {
@@ -98,12 +106,10 @@ private slots:
     void twistKnob11(int value);
     void twistKnob12(int value);
 
-    void realtimeDataSlot();
-
 private:
 
     // The minimum and maximum gains per filter.
-    static constexpr float GAIN_MIN = -18.0;
+    static constexpr float GAIN_MIN = -18.0;        // must be negative!
     static constexpr float GAIN_MAX = 18.0;
 
     // This is how long (in milliseconds) our "song listener" will wait
@@ -139,6 +145,9 @@ private:
     // Whether audio is currently being processed.
     bool processing = false;
 
+    // Whether the plot has been initialized.
+    bool plotInitialized = false;
+
     // The Qt UI to set up
     Ui::MainApp *ui;
 
@@ -156,7 +165,7 @@ private:
     int threadNumPerBlock = THREADS_PER_BLOCK;
     int maxNumBlock = MAX_NUM_BLOCK;
 
-    // Keep track of current freq and bw values
+    // Keep track of current frequency and BW values
     int dialValue[NUM_FILTERS * 2];
 
     // Keep track of current gain values
@@ -186,6 +195,8 @@ private:
     // Use to update filters by replacing the one at index "filterNum". 
     void updateFilter(int filterNum, float newGain, float newFreq,
                       float newBW, FilterType filtType);
+
+    void updatePlot();
 };
 
 #endif // MAINAPP_HH

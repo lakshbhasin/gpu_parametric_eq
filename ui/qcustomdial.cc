@@ -125,6 +125,26 @@ int QCustomDial::getFrequency()
 }
 
 
+/**
+ * Get the minimum frequency, based on the minimum knob value.
+ */
+int QCustomDial::minFrequency()
+{
+    return (int) std::round(FREQ_MULT * 
+            std::pow(LOG_BASE, KNOB_MIN / EXP_DIV));
+}
+
+
+/**
+ * Get the maximum frequency, based on the maximum knob value.
+ */
+int QCustomDial::maxFrequency()
+{
+    return (int) std::round(FREQ_MULT * 
+            std::pow(LOG_BASE, KNOB_MAX / EXP_DIV));
+}
+
+
 void QCustomDial::updateValue()
 {
     // Override the settings imposed by QtCreator if necessary...

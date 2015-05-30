@@ -9,6 +9,10 @@
 
 const float PI = 3.14159265358979;
 
+// The maximum frequency considered by our convolution. This is set
+// to avoid artifacts. Front-end code should try not to exceed this.
+const float MAX_FREQ = 18000.0;
+
 
 /**
  * This kernel takes an array of Filters, and creates the appropriate
@@ -44,16 +48,18 @@ void cudaFilterSetupKernel(const Filter *filters,
         // The frequency of this element is just the index times the
         // resolution, but we multiply by "2 pi sqrt(-1)" to get an
         // imaginary angular frequency (as desired for s-plane transfer
-        // functions).
+        // functions). 
+        float thisFreq = transFuncInd * transFuncRes;
+        
         cufftComplex s;
         s.x = 0.0;
-        s.y = (double) 2.0 * PI * transFuncInd * transFuncRes;
-
+        s.y = (double) 2.0 * PI * thisFreq;
+        
         // The output to store in the appropriate index of the transfer
         // function.
         cufftComplex output;
         output.x = 1.0;
-        output.y = 1.0;
+        output.y = 0.0;
         
         // Iterate through all of the filters and superimpose their
         // transfer functions. This "superposition" is actually a
