@@ -154,12 +154,11 @@ void WavData::loadData(const char *fname)
     fclose(wavFile);
 }
 
-int WavData::duration()
+float WavData::duration()
 {
-    // ceil is useful here for file < 1 second.
-    double duration = (double)actualSize /
+    float duration = (float) actualSize /
         (samplingRate * numChannels * bitsPerSample / 8);
-    return int(std::ceil(duration));
+    return duration;
 }
 
 WavData::~WavData()

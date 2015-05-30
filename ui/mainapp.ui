@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1017</width>
-    <height>559</height>
+    <width>1029</width>
+    <height>595</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,9 @@
     </property>
    </widget>
    <widget class="QSlider" name="progressBar">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -115,7 +118,7 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>400</y>
+      <y>420</y>
       <width>141</width>
       <height>71</height>
      </rect>
@@ -135,7 +138,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>430</y>
+      <y>450</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -148,20 +151,20 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>460</y>
+      <y>480</y>
       <width>81</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Max Block</string>
+     <string>Max Blocks</string>
     </property>
    </widget>
    <widget class="QLabel" name="appLogo">
     <property name="geometry">
      <rect>
       <x>-20</x>
-      <y>380</y>
+      <y>400</y>
       <width>171</width>
       <height>151</height>
      </rect>
@@ -171,10 +174,13 @@ p, li { white-space: pre-wrap; }
     </property>
    </widget>
    <widget class="QSpinBox" name="threadsBlockBox">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>430</y>
+      <y>450</y>
       <width>101</width>
       <height>25</height>
      </rect>
@@ -184,7 +190,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>460</y>
+      <y>480</y>
       <width>101</width>
       <height>25</height>
      </rect>
@@ -256,7 +262,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>510</y>
+      <y>520</y>
       <width>261</width>
       <height>16</height>
      </rect>
@@ -269,7 +275,7 @@ p, li { white-space: pre-wrap; }
      </font>
     </property>
     <property name="text">
-     <string>By Laksh Bhasin and Sharon Yang</string>
+     <string>Laksh BhasinSharon Yang</string>
     </property>
    </widget>
    <widget class="QSlider" name="verticalSlider">
@@ -694,7 +700,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="tickLabel">
     <property name="geometry">
      <rect>
-      <x>700</x>
+      <x>704</x>
       <y>80</y>
       <width>21</width>
       <height>22</height>
@@ -709,6 +715,9 @@ p, li { white-space: pre-wrap; }
     </property>
     <property name="text">
      <string>dB</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QLCDNumber" name="lcdNumber_1">
@@ -1205,7 +1214,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>130</y>
+      <y>120</y>
       <width>621</width>
       <height>251</height>
      </rect>
@@ -1215,7 +1224,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>400</y>
+      <y>420</y>
       <width>101</width>
       <height>25</height>
      </rect>
@@ -1225,13 +1234,13 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>400</y>
+      <y>420</y>
       <width>111</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Num Samples</string>
+     <string>Buffer Size</string>
     </property>
    </widget>
    <widget class="QComboBox" name="comboBox">
@@ -1367,7 +1376,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1017</width>
+     <width>1029</width>
      <height>16</height>
     </rect>
    </property>

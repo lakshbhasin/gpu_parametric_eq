@@ -128,7 +128,8 @@ void checkKernErr(const char *file, int line)
  * cudaMemcpy the data over to the GPU.
  */
 ParametricEQ::ParametricEQ(uint16_t numFilters, const Filter *filters) :
-    numFilters(numFilters)
+    numFilters(numFilters), threadsPerBlock(0), numBlocks(0),
+    numBufSamples(0), bufTimeMuS(0)
 {
     // Allocate space for the filters on both the host and device side.
     size_t filterArrSize = numFilters * sizeof(Filter);
@@ -247,25 +248,35 @@ void ParametricEQ::setSong(const char *fileName)
 
 
 /**
- * This function just sets numBufSamples (which must be positive).
+ * This function just sets numBufSamples (which must be positive). It also
+ * requires a new set of filters, since changing the buffer size changes
+ * the transfer function.
  *
  * Precondition: The parametric EQ must be paused (but it could be in the
  * middle of a song) or done processing.
  */
-void ParametricEQ::setNumBufSamples(uint32_t numBufSamp)
+void ParametricEQ::setNumBufSamples(uint32_t numBufSamp, Filter *filters)
 {
     if (!paused && processing)
     {
         throw std::logic_error("Cannot change numBufSamples while "
                 "Parametric EQ is not paused and still processing.");
     }
-
+    
     if (numBufSamp <= 0)
     {
         throw std::invalid_argument("numBufSamples must be positive.");
     }
 
+    if (filters == NULL)
+    {
+        throw std::invalid_argument("filters cannot be NULL.");
+    }
+
     numBufSamples = numBufSamp;
+
+    // Signal a transfer function update
+    setFilters(filters);
 }
 
 
@@ -351,13 +362,12 @@ uint32_t ParametricEQ::getNumBufSamples()
 }
 
 /**
- * Helper function to return the played time (in seconds
- * of our audio stream.
+ * Helper function to return the played time (in seconds) of our song, as a
+ * float.
  */
-int ParametricEQ::getPlayedTime()
+float ParametricEQ::getPlayedTime()
 {
-    // ceil function is useful here for case of file < 1 second.
-    return int(std::ceil((double)samplesPlayed / song->samplingRate));
+    return (float) samplesPlayed / song->samplingRate;
 }
 
 /**

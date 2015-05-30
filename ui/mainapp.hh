@@ -16,6 +16,10 @@
 
 /* Boost includes */
 #include <boost/thread.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/chrono.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 /* Custom classes' includes. */
 #include "ui_mainapp.h"
@@ -74,9 +78,9 @@ private slots:
     void on_threadsBlockBox_editingFinished();
     void on_blockNum_editingFinished();
 
-    void setNewDuration(int newDuration);
+    void setNewDuration(float newDuration);
 
-    void updatePosition();
+    void songListener();
 
     void sliderGain1(int value);
     void sliderGain2(int value);
@@ -106,6 +110,20 @@ private:
     static constexpr float GAIN_MIN = -18.0;
     static constexpr float GAIN_MAX = 18.0;
 
+    // This is how long (in milliseconds) our "song listener" will wait
+    // until it updates various aspects related to the song. 
+    static constexpr int LISTENER_UPD_MS = 100;
+
+    // The "resolution" of the progress bar (which tracks how much of the
+    // song we've played). This is in units of "steps" per second (i.e.
+    // setting this to 10 means that we can resolve song playing to a tenth
+    // of a second).
+    //
+    // It makes sense for this to equal the number of "listener updates" we
+    // have per second.
+    static constexpr int PROG_BAR_RES_PER_S = (int) (1000.0 / 
+                                                     LISTENER_UPD_MS);
+
     // The internal ParametricEQ to use. 
     ParametricEQ *paramEQ;
 
@@ -117,10 +135,10 @@ private:
 
     // The number of seconds of the (modified) song that has already been
     // played.
-    int alreadyPlayed;
+    float alreadyPlayed;
     
-    // The total duration of the song being played.
-    int duration;
+    // The total duration of the song being played, in seconds.
+    float duration;
 
     // Whether audio is currently being processed.
     bool processing = false;
@@ -128,12 +146,14 @@ private:
     // The Qt UI to set up
     Ui::MainApp *ui;
 
-    // Timer to query the samples played by the equalizer.
-    QTimer *timer;
+    // Timer to listen to song updates.
+    QTimer *songUpdatesTimer = NULL;
 
-    // Timers for data plotting.
-    QTimer *plotTimer;
-    QTimer *elapseTimer;
+    // Timer for data plotting.
+    QTimer *plotTimer = NULL;
+
+    // The thread that's calling the ParametricEQ.
+    boost::thread *processingThread = NULL;
 
     // Variables for GPU backend.
     int numSamples = NUM_SAMPLES;
@@ -147,7 +167,7 @@ private:
     int gain[NUM_FILTERS];
 
     // Use to convert audio play time to string that makes sense.
-    QString calculateTimeString(int time);
+    QString calculateTimeString(float timeFloat);
     void setTimeString();
 
     // Use to connect knob variables frontend to backend.
@@ -158,11 +178,15 @@ private:
 
     // Set up real-time data plotting.
     void initPlot();
+    
     void initDeviceMeta();
     void initWindow();
-    void freeFilterProperties();
-    void initiateProcessing();
 
+    void freeFilterProperties();
+
+    void initiateProcessing();
+    void handleStopProcessing();
+    
     // Use to update filters by replacing the one at index "filterNum". 
     void updateFilter(int filterNum, float newGain, float newFreq,
                       float newBW, FilterType filtType);

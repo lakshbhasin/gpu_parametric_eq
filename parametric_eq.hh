@@ -74,19 +74,19 @@ private:
 
     // The number of threads per block to use. This should only be
     // changeable if the EQ is not processing.
-    uint16_t threadsPerBlock = 0;
+    uint16_t threadsPerBlock;
 
     // The number of blocks to use. Also only changeable if the EQ is not
     // processing.
-    uint16_t numBlocks = 0;
+    uint16_t numBlocks;
 
     // The number of samples to use per buffer and **per channel**. This is
     // only changeable if the EQ is not processing.
-    uint32_t numBufSamples = 0;
+    uint32_t numBufSamples;
 
     // The amount of time it takes to play a full buffer of audio, in
     // microseconds.
-    uint64_t bufTimeMuS = 0;
+    uint64_t bufTimeMuS;
 
     // An io_service object that keeps our code running until all
     // processing and playing are done.
@@ -212,7 +212,7 @@ public:
 
     // Setter functions
     void setSong(const char *fileName);
-    void setNumBufSamples(uint32_t numBufSamp);
+    void setNumBufSamples(uint32_t numBufSamp, Filter *filters);
     void setFilters(const Filter *filters);
     void setThreadsPerBlock(uint16_t tPerBlock);
     void setMaxBlocks(uint16_t maxBlocks);
@@ -222,7 +222,7 @@ public:
     int16_t *getHostClippedAudioBuf();
     WavData *getSong();
     uint32_t getNumBufSamples();
-    int getPlayedTime();
+    float getPlayedTime();
     Filter *getCurrentFilter();
 
     // Song playback functions

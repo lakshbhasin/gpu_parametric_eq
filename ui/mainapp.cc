@@ -199,6 +199,7 @@ void MainApp::initPlot()
 
 void MainApp::realtimeDataSlot()
 {
+    /*
     double timeValue = duration - elapseTimer->remainingTime() / 1000.0;
     static double lastPointKey = 0;
     if (timeValue - lastPointKey > 0.01)
@@ -215,6 +216,7 @@ void MainApp::realtimeDataSlot()
     }
     ui->customPlot->xAxis->setRange(timeValue + 0.25, 8, Qt::AlignRight);
     ui->customPlot->replot();
+    */
 }
 
 /**
@@ -240,7 +242,7 @@ void MainApp::initWindow()
     ui->appLogo->setPixmap(logo);
 
     // Num samples, threads / block and max block adjustables
-    ui->numSampleBox->setMinimum(512);
+    ui->numSampleBox->setMinimum(1024);
     ui->numSampleBox->setMaximum(65536);
     ui->numSampleBox->setValue(numSamples);
 
@@ -282,6 +284,62 @@ void MainApp::initWindow()
     gain[3] = (int)GAIN_DEFAULT4;
     gain[4] = (int)GAIN_DEFAULT5;
     gain[5] = (int)GAIN_DEFAULT6;
+
+    // Update all sliders so they have a custom look. 
+    
+    QString styleSheetHorizontal =
+        QString("QSlider::groove:horizontal {") +
+        QString("   border: 1px solid #222222;") +
+        QString("   width: 629px; /* subtracted off border */") +
+        QString("   height: 2px; /* fixed size for groove */") +
+        QString("   margin: 2px 0;") +
+        QString("   border-radius: 3px;") +
+        QString("} ") +
+        QString("QSlider::handle:horizontal {") +
+        QString("   background-color: #eeeeee;") +
+        QString("   border: 1px solid #777777;") +
+        QString("   width: 8px;") +
+        QString("   margin: -4px 0; /* Expand outside the groove */") +
+        QString("   border-radius: 3px;") +
+        QString("} ") +
+        QString("QSlider::add-page:horizontal { /* Before handler */") +
+        QString("   background-color: #777777;") +
+        QString("   margin: 2px 0;") +
+        QString("}") +
+        QString("QSlider::sub-page:horizontal { /* After handler */") +
+        QString("   background-color: #eeeeee;") +
+        QString("   margin: 2px 0;") +
+        QString("} ");
+
+    QString styleSheetVertical =
+        QString("QSlider::groove:vertical {") +
+        QString("   border: 1px solid #222222;") +
+        QString("   height: 250px; /* subtracted off border */") +
+        QString("   width: 2px; /* fixed size for groove */") +
+        QString("   border-radius: 3px;") +
+        QString("} ") +
+        QString("QSlider::handle:vertical {") +
+        QString("   background-color: #eeeeee;") +
+        QString("   border: 1px solid #777777;") +
+        QString("   height: 8px;") +
+        QString("   margin: 0 -4px; /* Expand outside the groove */") +
+        QString("   border-radius: 3px;") +
+        QString("} ") +
+        QString("QSlider::add-page:vertical { /* Before handler */") +
+        QString("   background-color: #eeeeee;") +
+        QString("} ") +
+        QString("QSlider::sub-page:vertical { /* After handler */") +
+        QString("   background-color: #777777;") +
+        QString("} ");
+
+    ui->progressBar->setStyleSheet(styleSheetHorizontal);
+    
+    ui->verticalSlider->setStyleSheet(styleSheetVertical);
+    ui->verticalSlider_2->setStyleSheet(styleSheetVertical);
+    ui->verticalSlider_3->setStyleSheet(styleSheetVertical);
+    ui->verticalSlider_4->setStyleSheet(styleSheetVertical);
+    ui->verticalSlider_5->setStyleSheet(styleSheetVertical);
+    ui->verticalSlider_6->setStyleSheet(styleSheetVertical);
 
     initPlot();
 
@@ -342,9 +400,13 @@ void MainApp::initDeviceMeta()
  * This helper function calculates a time string from a time (which
  * represents a song's length) in seconds.
  */
-QString MainApp::calculateTimeString(int time)
+QString MainApp::calculateTimeString(float timeFloat)
 {
     int seconds, hours, minutes;
+    
+    // Convert to an int
+    int time = (int) std::ceil(timeFloat);
+    
     seconds = time % 60;
     minutes = time / 60 % 60;
     hours = time / (60 * 60);
@@ -392,25 +454,15 @@ void MainApp::setTimeString()
  * This function is called to initialize new duration
  * when a song is loaded after file selection.
  */
-void MainApp::setNewDuration(int newDuration)
+void MainApp::setNewDuration(float newDuration)
 {
     duration = newDuration;
-    alreadyPlayed = 0;
+    alreadyPlayed = 0.0;
     setTimeString();
-    ui->progressBar->setRange(alreadyPlayed, duration);
-    ui->progressBar->setValue(alreadyPlayed);
-    ui->progressBar->repaint();
-}
-
-/**
- * This function is called by timer to query the
- * time played of the current song.
- */
-void MainApp::updatePosition()
-{
-    alreadyPlayed = paramEQ->getPlayedTime();
-    setTimeString();
-    ui->progressBar->setValue(alreadyPlayed);
+    
+    ui->progressBar->setRange(0.0, 
+            std::ceil(duration * PROG_BAR_RES_PER_S));
+    ui->progressBar->setValue(0.0);
     ui->progressBar->repaint();
 }
 
@@ -420,6 +472,8 @@ void MainApp::updatePosition()
  */
 void MainApp::on_fileSelectButton_clicked()
 {
+    cout << "HELLO" << endl;
+
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Open WAV file for test"), tr("Audio files (*.wav)"));
 
@@ -439,35 +493,15 @@ void MainApp::on_fileSelectButton_clicked()
         char* charDataPath  = currDataFile.toLocal8Bit().data();
         
         // Initialize properties on the Parametric EQ's side.
-        // TODO: let number of samples per buffer etc be configurable.
         paramEQ->setSong(charDataPath);
-        paramEQ->setNumBufSamples(4096);
+        paramEQ->setNumBufSamples(numSamples, filters);
         paramEQ->setThreadsPerBlock(threadNumPerBlock);
         paramEQ->setMaxBlocks(maxNumBlock);
 
         // Read the song's duration and update the time string.
-        int newDuration = (paramEQ->getSong())->duration();
+        float newDuration = (paramEQ->getSong())->duration();
         setNewDuration(newDuration);
     }
-}
-
-
-/**
- * This function is called on a separate thread. It begins the parametric
- * equalizer's processing, and does not return until that processing is
- * over.
- */
-void MainApp::initiateProcessing()
-{
-    // Note that the ParametricEQ automatically "stops" itself when it's
-    // done processing the entire song.
-    paramEQ->startProcessingSound();
-
-    // Once processing is done, change back the "Process" button.
-    ui->processButton->setText("Process");
-    cout << "Finished processing file: " << currDataFile.toLocal8Bit().data() 
-         << endl;
-    processing = false;
 }
 
 
@@ -730,6 +764,90 @@ void MainApp::twistKnob12(int value)
     setKnobValue(11, value);
 }
 
+
+/**
+ * This helper function is called when we want to stop processing. It does
+ * everything except for actually call stopProcessingSound() on the
+ * ParametricEQ (this must be done elsewhere).
+ */
+void MainApp::handleStopProcessing()
+{
+    // Clean up after the processing thread.
+    if (processingThread != NULL)
+    {
+        processingThread->join();
+        delete processingThread;
+        processingThread = NULL;
+    }
+
+    // Stop the relevant timers.
+    if (songUpdatesTimer != NULL)
+    {
+        songUpdatesTimer->stop();
+        delete songUpdatesTimer;
+        songUpdatesTimer = NULL;
+    }
+
+    // Clean up the GUI
+    ui->processButton->setText("Process");
+    ui->fileSelectButton->setEnabled(true);
+    ui->threadsBlockBox->setEnabled(true);
+    ui->numSampleBox->setEnabled(true);
+    ui->blockNum->setEnabled(true);
+
+    processing = false;
+}
+
+
+/**
+ * This function is called on a separate thread. It begins the parametric
+ * equalizer's processing, and does not return until that processing is
+ * over.
+ */
+void MainApp::initiateProcessing()
+{
+    // Note that the ParametricEQ automatically "stops" itself when it's
+    // done processing the entire song.
+    paramEQ->startProcessingSound();
+
+    cout << "Finished processing file: " << currDataFile.toLocal8Bit().data() 
+         << endl;
+    
+    // Signal to songListener() that we're done.
+    processing = false;
+}
+
+
+/**
+ * This function is called by the "songUpdatesTimer" so we can update
+ * things based on how much of the song has played. It is used to figure
+ * out how much of the song we've played, and also to check if we've
+ * stopped processing without the "Stop" button being processed.
+ *
+ */
+void MainApp::songListener()
+{
+    // Check if we stopped processing.
+    if (!processing)
+    {
+        // Clean up the timer and the GUI
+        handleStopProcessing();
+        return;
+    }
+    
+    // Update the progress bar and the time string.
+    
+    // Time played in seconds (float).
+    alreadyPlayed = paramEQ->getPlayedTime();
+    setTimeString();
+    
+    // Account for the resolution of the progress bar.
+    ui->progressBar->setValue(
+            std::ceil(alreadyPlayed * PROG_BAR_RES_PER_S));
+    ui->progressBar->repaint();
+}
+
+
 /**
  * This function responds to the "Process"/"Stop" button being pressed.
  */
@@ -747,103 +865,100 @@ void MainApp::on_processButton_clicked()
     if (processing)
     {
         // Stop processing.
-        ui->processButton->setText("Process");
-        cout << "Stopped processing file: " << 
-             currDataFile.toLocal8Bit().data() << endl;
-        
-        processing = false;
         paramEQ->stopProcessingSound();
-        timer->stop();
-        plotTimer->stop();
-        elapseTimer->stop();
+
+        cout << "Stopped processing file: " << 
+            currDataFile.toLocal8Bit().data() << endl;
+        
+        // Clean up the GUI, timers, processing thread, etc.
+        handleStopProcessing();
     }
     else
     {
-        // Start processing, but on a separate thread.
+        // Start processing
+        
+        // Update GUI
         ui->processButton->setText("Stop");
+        ui->fileSelectButton->setEnabled(false);
+        ui->threadsBlockBox->setEnabled(false);
+        ui->numSampleBox->setEnabled(false);
+        ui->blockNum->setEnabled(false);
+
         cout << "Processing file: " << currDataFile.toLocal8Bit().data() 
              << endl;
         
         processing = true;
-        boost::thread processingThread(boost::bind(
-                    &MainApp::initiateProcessing, this));
-        timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(updatePosition()));
-        // Timer to query the samples played every half second.
-        timer->start(500);
 
-        // Start plotting
-        plotTimer = new QTimer(this);
-        elapseTimer = new QTimer(this);
-        elapseTimer->start(duration * 1000.0);
-        connect(plotTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
-        plotTimer->start(0);
+        // Use a separate thread to start processing.
+        processingThread = new boost::thread(boost::bind(
+                    &MainApp::initiateProcessing, this));
+            
+        // Timer to listen to song updates, and call songListener() every 
+        // LISTENER_UPD_MS milliseconds.
+        songUpdatesTimer = new QTimer(this);
+        connect(songUpdatesTimer, SIGNAL(timeout()), this, 
+                SLOT(songListener()));
+        songUpdatesTimer->start(LISTENER_UPD_MS);
+        
     }
     
 }
 
+
 void MainApp::on_numSampleBox_editingFinished()
 {
     int newNumSamples = ui->numSampleBox->value();
-    try
-    {
-        paramEQ->setNumBufSamples(newNumSamples);
-    }
-    catch (std::logic_error e)
-    {
-        ui->statusBar->showMessage(e.what(), 5000);
-        cout << e.what() << endl;
-        ui->threadsBlockBox->setValue(numSamples);
-        return;
-    }
+    
+    paramEQ->setNumBufSamples(newNumSamples, filters);
     numSamples = newNumSamples;
-    QString msg = "The number of samples to use per buffer (per "
-        "channel) has been set to " +  newNumSamples;
-    cout << msg.toLocal8Bit().data() << endl;
+
+    // Display a status message in the bar and in the terminal
+    QString msg = QString("The number of samples to use per buffer ") +
+                  QString("per channel) has been set to ") + 
+                  QString::number(newNumSamples);
+   
+#ifndef NDEBUG
+    cout << msg.toUtf8().constData() << endl;
+#endif
+
     ui->statusBar->showMessage(msg, 5000);
 }
+
 
 void MainApp::on_threadsBlockBox_editingFinished()
 {
     int newThreadsBlock = ui->threadsBlockBox->value();
-    try
-    {
-        paramEQ->setThreadsPerBlock(newThreadsBlock);
-    }
-    catch (std::logic_error e)
-    {
-        ui->statusBar->showMessage(e.what(), 5000);
-        cout << e.what() << endl;
-        ui->threadsBlockBox->setValue(threadNumPerBlock);
-        return;
-    }
+    
+    paramEQ->setThreadsPerBlock(newThreadsBlock);
     threadNumPerBlock = newThreadsBlock;
-    QString msg = "Threads per block has been set to " + \
-        threadNumPerBlock;
-    cout << msg.toLocal8Bit().data() << endl;
+    
+    // Display a status message in the bar and in the terminal
+    QString msg = QString("Threads per block has been set to ") +
+                  QString::number(threadNumPerBlock);
+    
+#ifndef NDEBUG
+    cout << msg.toUtf8().constData() << endl;
+#endif
+
     ui->statusBar->showMessage(msg, 5000);
 }
-
 
 
 void MainApp::on_blockNum_editingFinished()
 {
     int newBlockNum = ui->blockNum->value();
-    try
-    {
-        paramEQ->setMaxBlocks(newBlockNum);
-    }
-    catch (std::logic_error e)
-    {
-        ui->statusBar->showMessage(e.what(), 5000);
-        cout << e.what() << endl;
-        ui->blockNum->setValue(maxNumBlock);
-        return;
-    }
+    
+    paramEQ->setMaxBlocks(newBlockNum);
     maxNumBlock = newBlockNum;
-    QString msg = "Max number of blocks has been set to " + \
-        int(maxNumBlock);
-    cout << msg.toLocal8Bit().data() << endl;
+    
+    // Display a status message in the bar and in the terminal.
+    QString msg = QString("Max number of blocks has been set to ") +
+                  QString::number(maxNumBlock);
+    
+#ifndef NDEBUG
+    cout << msg.toUtf8().constData() << endl;
+#endif
+
     ui->statusBar->showMessage(msg, 5000);
 }
 
