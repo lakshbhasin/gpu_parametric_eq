@@ -52,11 +52,12 @@ void cudaFilterSetupKernel(const Filter *filters,
         // The output to store in the appropriate index of the transfer
         // function.
         cufftComplex output;
-        output.x = 0.0;
-        output.y = 0.0;
+        output.x = 1.0;
+        output.y = 1.0;
         
         // Iterate through all of the filters and superimpose their
-        // transfer functions.
+        // transfer functions. This "superposition" is actually a
+        // multiplication, since we're dealing with transfer functions. 
         for (int i = 0; i < numFilters; i++)
         {
             Filter thisFilter = filters[i];
@@ -111,9 +112,10 @@ void cudaFilterSetupKernel(const Filter *filters,
                     {
                         quot = cuCdivf(denomBoost, numerBoost);
                     }
-
-                    output.x += quot.x;
-                    output.y += quot.y;
+                    
+                    // Multiply the previous transfer function by this one.
+                    output.x *= quot.x;
+                    output.y *= quot.y;
                     
                     break;
                 
@@ -122,11 +124,6 @@ void cudaFilterSetupKernel(const Filter *filters,
                     asm("trap;");
             }
         }
-
-        // Divide by numFilters in order to take a "weighted average" of
-        // the filters.
-        output.x /= numFilters;
-        output.y /= numFilters;
 
         // Write the "output" to global memory.
         transferFunc[transFuncInd] = output;

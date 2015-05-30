@@ -174,9 +174,7 @@ void ParametricEQ::setFilters(const Filter *filters)
     {
         Filter thisFilter = filters[i];        
         hostFilters[i].type = thisFilter.type;
-        
-        BandBoostCutProp *thisFiltProp = thisFilter.bandBCProp;
-        
+
         // A pointer to this filter's property struct, which will be stored
         // **on device**.
         void *devFiltProp;
@@ -185,6 +183,9 @@ void ParametricEQ::setFilters(const Filter *filters)
         {
             case FT_BAND_BOOST:
             case FT_BAND_CUT:
+            {
+                BandBoostCutProp *thisFiltProp = thisFilter.bandBCProp;
+                
                 // Allocate space for this filter's properties on device.
                 gpuErrChk( cudaMalloc((void **) &devFiltProp,
                                       sizeof(BandBoostCutProp)) );
@@ -200,6 +201,7 @@ void ParametricEQ::setFilters(const Filter *filters)
                     devFiltProp;
 
                 break;
+            }
 
             default:
                 throw std::invalid_argument("Invalid filter type: " +
@@ -207,7 +209,7 @@ void ParametricEQ::setFilters(const Filter *filters)
         }
 
     }
-    
+
     // We can now free the device-side filter properties later, if we want.
     initializedDevFilterProps = true;
 

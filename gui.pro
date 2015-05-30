@@ -12,7 +12,7 @@ MOC_DIR = ./ui
 
 # Specific flags for release configuration
 QMAKE_CXXFLAGS_RELEASE  -= -O2
-QMAKE_CXXFLAGS_RELEASE  += -O3 #-DNDEBUG
+QMAKE_CXXFLAGS_RELEASE  += -O3 -DNDEBUG
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 TEMPLATE = app

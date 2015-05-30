@@ -6,7 +6,6 @@ MainApp::MainApp(QWidget *parent) :
 {
     // Initialize the ParametricEQ. This first requires initializing
     // NUM_FILTERS filters. We'll assume band-boost filters for now.
-    filters = (Filter *) malloc(NUM_FILTERS * sizeof(Filter));
 
     // The first filter will initially be at 64 Hz.
     float freq1 = FREQ_DEFAULT1;           // Hz
@@ -86,8 +85,6 @@ MainApp::MainApp(QWidget *parent) :
 
     filters[5].type = FT_BAND_BOOST;
     filters[5].bandBCProp = bandBCProp6;
-
-    // TODO: Add seventh filter initially at 4096 Hz.
 
     // Construct the parametric EQ. 
     paramEQ = new ParametricEQ(NUM_FILTERS, filters);
@@ -243,8 +240,8 @@ void MainApp::initWindow()
     ui->appLogo->setPixmap(logo);
 
     // Num samples, threads / block and max block adjustables
-    ui->numSampleBox->setMinimum(1);
-    ui->numSampleBox->setMaximum(2000);
+    ui->numSampleBox->setMinimum(512);
+    ui->numSampleBox->setMaximum(65536);
     ui->numSampleBox->setValue(numSamples);
 
     ui->threadsBlockBox->setMinimum(32);
@@ -254,6 +251,8 @@ void MainApp::initWindow()
     ui->blockNum->setMinimum(1);
     ui->blockNum->setMaximum(400);
     ui->blockNum->setValue(maxNumBlock);
+    
+    initDials();
 
     // Set connection for slider and display
     connect(ui->verticalSlider, SIGNAL(valueChanged(int)),
@@ -284,8 +283,6 @@ void MainApp::initWindow()
     gain[4] = (int)GAIN_DEFAULT5;
     gain[5] = (int)GAIN_DEFAULT6;
 
-    initDials();
-
     initPlot();
 
     initDeviceMeta();
@@ -309,7 +306,7 @@ void MainApp::initDeviceMeta()
         deviceName = prop.name;
         break;
     }
-    deviceName = "Nvidia " + deviceName;
+    deviceName = "NVidia " + deviceName;
 
     // Find architecture type
     QString arch;
@@ -474,7 +471,8 @@ void MainApp::initiateProcessing()
 
 
 /**
- * Set knob's LCD number value based on direction turned.
+ * Set knob's LCD number value based on the direction that a knob turned.
+ * Also, update the set of filters.
  */
 void MainApp::setKnobValue(int knobNum, int val)
 {
@@ -521,106 +519,152 @@ void MainApp::setKnobValue(int knobNum, int val)
         default:
             currLCD = ui->lcdNumber_7;
     }
+
     dialValue[knobNum] = val;
     currLCD->display(dialValue[knobNum]);
-    if(knobNum >= KNOB_SET)
+
+    int filterNum;
+
+    if(knobNum >= NUM_FILTERS)
     {
-        updateFilter(knobNum - KNOB_SET, gain[knobNum - KNOB_SET],
-            dialValue[knobNum - KNOB_SET], dialValue[knobNum], false);
+        // Knob is for changing BW
+        filterNum = knobNum - NUM_FILTERS;
     }
     else
     {
-        updateFilter(knobNum, gain[knobNum], dialValue[knobNum],
-            dialValue[knobNum + KNOB_SET], false);
+        // Knob is for changing freq
+        filterNum = knobNum;
     }
+
+    assert(filterNum >= 0 && filterNum < NUM_FILTERS);
+
+    // Note: filter type is unchanged if we're twisting knobs.
+    updateFilter(filterNum,                             /* filterNum */ 
+                 gain[filterNum],                       /* newGain */ 
+                 dialValue[filterNum],                  /* newFreq */
+                 dialValue[filterNum + NUM_FILTERS],    /* newBW */
+                 filters[filterNum].type                /* filtType */
+                 );
 }
 
+
 /**
- * A series of functions for each slider's connection.
+ * Set gain-related slider's LCD number based on the new slider value.
+ * Also, update the gain of the specified filter.
+ */
+void MainApp::setGainValue(int filterNum, int val)
+{
+    // Don't do anything if the value is out of bounds.
+    if ( !(val <= GAIN_MAX && val >= GAIN_MIN) )
+        return;
+
+    assert(filterNum >= 0 && filterNum < NUM_FILTERS);
+
+    // Set the new filter type based on the gain and the old filter type.
+    FilterType newFilterType;
+
+    switch(filters[filterNum].type)
+    {
+        case FT_BAND_BOOST:
+        case FT_BAND_CUT:
+            newFilterType = FT_BAND_BOOST;
+
+            // Change the filter to a cut if the new gain is < 0
+            if (val < 0)
+            {
+                newFilterType = FT_BAND_CUT;
+            }
+        
+            break;
+
+        default:
+            throw std::invalid_argument("Invalid filter type: " +
+                    std::to_string(filters[filterNum].type));
+    }
+    
+    // Update gain array and UI.
+    gain[filterNum] = val;
+
+    QLCDNumber *currLCD;
+    switch(filterNum)
+    {
+        case 0:
+            currLCD = ui->lcdNumber_1;
+            break;
+        case 1:
+            currLCD = ui->lcdNumber_2;
+            break;
+        case 2:
+            currLCD = ui->lcdNumber_3;
+            break;
+        case 3:
+            currLCD = ui->lcdNumber_4;
+            break;
+        case 4:
+            currLCD = ui->lcdNumber_5;
+            break;
+        case 5:
+            currLCD = ui->lcdNumber_6;
+            break;
+        
+        default:
+            throw std::invalid_argument("Invalid gain LCD number: " +
+                    std::to_string(filterNum));
+    }
+
+    currLCD->display(val);
+   
+    // Update back-end filters.
+    updateFilter(filterNum,                             /* filterNum */ 
+                 gain[filterNum],                       /* newGain */ 
+                 dialValue[filterNum],                  /* newFreq */
+                 dialValue[filterNum + NUM_FILTERS],    /* newBW */
+                 newFilterType                          /* filtType */
+                 );
+}
+
+
+/**
+ * A series of functions for each gain-related slider's connection. Note
+ * that each slider value is multiplied by NUM_FILTERS since we are taking
+ * a weighted average of each individual transfer function, in order to get the final transfer
+ * function.
  */
 void MainApp::sliderGain1(int value)
 {
-    int gainNum = 0;
-    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
-        return;
-    int cut = false;
-    if (gain[gainNum] >= 0 && value < 0)
-        cut = true;
-    ui->lcdNumber->display(value);
-    gain[0] = value;
-    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
-        dialValue[gainNum + KNOB_SET], cut);
+    setGainValue(0, value);
 }
+
 
 void MainApp::sliderGain2(int value)
 {
-    int gainNum = 1;
-    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
-        return;
-    int cut = false;
-    if (gain[gainNum] >= 0 && value < 0)
-        cut = true;
-    ui->lcdNumber_2->display(value);
-    gain[1] = value;
-    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
-        dialValue[gainNum + KNOB_SET], cut);
+    setGainValue(1, value);
 }
+
 
 void MainApp::sliderGain3(int value)
 {
-    int gainNum = 2;
-    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
-        return;
-    int cut = false;
-    if (gain[gainNum] >= 0 && value < 0)
-        cut = true;
-    ui->lcdNumber_3->display(value);
-    gain[2] = value;
-    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
-        dialValue[gainNum + KNOB_SET], cut);
+    setGainValue(2, value);
 }
+
 
 void MainApp::sliderGain4(int value)
 {
-    int gainNum = 3;
-    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
-        return;
-    int cut = false;
-    if (gain[gainNum] >= 0 && value < 0)
-        cut = true;
-    ui->lcdNumber_4->display(value);
-    gain[3] = value;
-    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
-        dialValue[gainNum + KNOB_SET], cut);
+    setGainValue(3, value);
 }
+
 
 void MainApp::sliderGain5(int value)
 {
-    int gainNum = 4;
-    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
-        return;
-    int cut = false;
-    if (gain[gainNum] >= 0 && value < 0)
-        cut = true;
-    ui->lcdNumber_5->display(value);
-    gain[4] = value;
-    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
-        dialValue[gainNum + KNOB_SET], cut);
+    setGainValue(4, value);
 }
+
 
 void MainApp::sliderGain6(int value)
 {
-    int gainNum = 5;
-    if ( !(value <= GAIN_MAX && value >= GAIN_MIN) )
-        return;
-    int cut = false;
-    if (gain[gainNum] >= 0 && value < 0)
-        cut = true;
-    ui->lcdNumber_6->display(value);
-    gain[5] = value;
-    updateFilter(gainNum, gain[gainNum], dialValue[gainNum],
-        dialValue[gainNum + KNOB_SET], cut);
+    setGainValue(5, value);
 }
+
 
 /**
  * A series of functions for each knob's connection.
@@ -806,61 +850,57 @@ void MainApp::on_blockNum_editingFinished()
  * This helper function loads the current filter value and update
  * it accordingly.
  */
-void MainApp::updateFilter(int filterNum, int newGain, int newFreq,
-    int newBW, bool cut)
+void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
+                           float newBW, FilterType filtType)
 {
-    /*
-    // Use current filters to retrieve current info
-    Filter *currFilter = paramEQ->getCurrentFilter();
-    float freq = (float)newFreq;         // Hz
-    float bandwidth = (float)newBW;      // Hz
-    float gain = std::abs((float)newGain); // dB (must be positive)
-
-    BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
-        malloc(sizeof(BandBoostCutProp));
-    bandBCProp->omegaNought = 2.0 * M_PI * freq;
-    bandBCProp->Q = freq/bandwidth;
-    bandBCProp->K = std::pow(10.0, gain/20.0);
-
-    if ( !cut )
-        filters[filterNum].type = FT_BAND_BOOST;
-    else
-        filters[filterNum].type = FT_BAND_CUT;
-    filters[filterNum].bandBCProp = bandBCProp;
-    */
-    // Make a new copy of the updated filters
-    Filter *newFilters = (Filter *) malloc(KNOB_SET * sizeof(Filter));
-    for (int k = 0; k < KNOB_SET; k++)
+    float freq = newFreq;                   // Hz
+    float bandwidth = newBW;                // Hz
+    float gain = std::fabs(newGain);        // dB (must be positive)    
+    
+    Filter *oldFilter = &filters[filterNum];
+    
+    // Free the old Filter's properties
+    switch(oldFilter->type)
     {
-        if (k != filterNum)
+        case FT_BAND_BOOST:
+        case FT_BAND_CUT:
+            free(oldFilter->bandBCProp);
+            break;
+        
+        default:
+            throw std::invalid_argument("Invalid old filter type: " +
+                    std::to_string(oldFilter->type));
+    }
+    
+    // Set the new Filter's type, and set its properties.    
+    oldFilter->type = filtType;
+
+    switch(filtType)
+    {
+        case FT_BAND_BOOST:
+        case FT_BAND_CUT:
         {
-            newFilters[k].type = FT_BAND_BOOST;
+            // Set up the new BandBoostCutProp
             BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
                 malloc(sizeof(BandBoostCutProp));
-            bandBCProp->omegaNought = 2.0 * M_PI * (float)dialValue[k];
-            bandBCProp->Q = (float)dialValue[k] / (float)dialValue[k + KNOB_SET];
-            bandBCProp->K = std::pow(10.0, (float)gain[k] / 20.0);
-            newFilters[k].bandBCProp = bandBCProp;
-        }
-        else
-        {
-            float freq = (float)newFreq;           // Hz
-            float bandwidth = (float)newBW;        // Hz
-            float gain = std::abs((float)newGain); // dB (must be positive)
-            BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
-                malloc(sizeof(BandBoostCutProp));
+            
             bandBCProp->omegaNought = 2.0 * M_PI * freq;
             bandBCProp->Q = freq / bandwidth;
             bandBCProp->K = std::pow(10.0, gain / 20.0);
-            if ( !cut )
-                newFilters[filterNum].type = FT_BAND_BOOST;
-            else
-                newFilters[filterNum].type = FT_BAND_CUT;
-            newFilters[filterNum].bandBCProp = bandBCProp;
+    
+            oldFilter->bandBCProp = bandBCProp;
+            break;
         }
+
+        default:
+            throw std::invalid_argument("Invalid new filter type: " +
+                    std::to_string(filtType));
     }
-    paramEQ->setFilters(newFilters);
+    
+    // Have the ParametricEQ signal an update.
+    paramEQ->setFilters(filters);
 }
+
 
 /**
  * This helper function just frees the filter properties for each filter,
@@ -888,12 +928,10 @@ void MainApp::freeFilterProperties()
 }
 
 
-/* Destructor */
+/** Destructor **/
 MainApp::~MainApp()
 {
     freeFilterProperties(); 
-    free(filters);
-    filters = NULL;
 
     delete paramEQ;
     paramEQ = NULL;
