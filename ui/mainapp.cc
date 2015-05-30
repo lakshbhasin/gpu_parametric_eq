@@ -242,7 +242,11 @@ void MainApp::initWindow()
     QPixmap logo(guiPath + "gpu_logo.gif");
     ui->appLogo->setPixmap(logo);
 
-    // Threads / block and max block adjustables
+    // Num samples, threads / block and max block adjustables
+    ui->numSampleBox->setMinimum(1);
+    ui->numSampleBox->setMaximum(2000);
+    ui->numSampleBox->setValue(numSamples);
+
     ui->threadsBlockBox->setMinimum(32);
     ui->threadsBlockBox->setMaximum(1024);
     ui->threadsBlockBox->setValue(threadNumPerBlock);
@@ -654,6 +658,8 @@ void MainApp::on_processButton_clicked()
         processing = false;
         paramEQ->stopProcessingSound();
         timer->stop();
+        plotTimer->stop();
+        elapseTimer->stop();
     }
     else
     {
@@ -680,6 +686,27 @@ void MainApp::on_processButton_clicked()
     
 }
 
+void MainApp::on_numSampleBox_editingFinished()
+{
+    int newNumSamples = ui->numSampleBox->value();
+    try
+    {
+        paramEQ->setNumBufSamples(newNumSamples);
+    }
+    catch (std::logic_error e)
+    {
+        ui->statusBar->showMessage(e.what(), 5000);
+        cout << e.what() << endl;
+        ui->threadsBlockBox->setValue(numSamples);
+        return;
+    }
+    numSamples = newNumSamples;
+    QString msg = "The number of samples to use per buffer (per "
+        "channel) has been set to " +  newNumSamples;
+    cout << msg.toLocal8Bit().data() << endl;
+    ui->statusBar->showMessage(msg, 5000);
+}
+
 void MainApp::on_threadsBlockBox_editingFinished()
 {
     int newThreadsBlock = ui->threadsBlockBox->value();
@@ -691,7 +718,7 @@ void MainApp::on_threadsBlockBox_editingFinished()
     {
         ui->statusBar->showMessage(e.what(), 5000);
         cout << e.what() << endl;
-        ui->threadsBlockBox->setValue(200);
+        ui->threadsBlockBox->setValue(threadNumPerBlock);
         return;
     }
     threadNumPerBlock = newThreadsBlock;

@@ -108,7 +108,7 @@
    <widget class="QTextBrowser" name="textBrowser">
     <property name="geometry">
      <rect>
-      <x>200</x>
+      <x>190</x>
       <y>400</y>
       <width>161</width>
       <height>91</height>
@@ -128,8 +128,8 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>460</y>
+      <x>500</x>
+      <y>430</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -141,14 +141,14 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>510</x>
+      <x>500</x>
       <y>460</y>
-      <width>121</width>
+      <width>81</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Max. # of Blocks</string>
+     <string>Max Block</string>
     </property>
    </widget>
    <widget class="QLabel" name="appLogo">
@@ -167,20 +167,20 @@ p, li { white-space: pre-wrap; }
    <widget class="QSpinBox" name="threadsBlockBox">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>390</x>
       <y>430</y>
-      <width>111</width>
-      <height>27</height>
+      <width>101</width>
+      <height>25</height>
      </rect>
     </property>
    </widget>
    <widget class="QSpinBox" name="blockNum">
     <property name="geometry">
      <rect>
-      <x>510</x>
-      <y>430</y>
-      <width>111</width>
-      <height>27</height>
+      <x>390</x>
+      <y>460</y>
+      <width>101</width>
+      <height>25</height>
      </rect>
     </property>
    </widget>
@@ -1148,6 +1148,29 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
+   <widget class="QSpinBox" name="numSampleBox">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>400</y>
+      <width>101</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>400</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Num Samples</string>
+    </property>
+   </widget>
    <zorder>fileSelectButton</zorder>
    <zorder>textEdit</zorder>
    <zorder>processButton</zorder>
@@ -1207,6 +1230,8 @@ p, li { white-space: pre-wrap; }
    <zorder>dial_11</zorder>
    <zorder>dial_12</zorder>
    <zorder>customPlot</zorder>
+   <zorder>numSampleBox</zorder>
+   <zorder>label_7</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

@@ -21,6 +21,11 @@
 #include "ui_mainapp.h"
 #include "parametric_eq.hh"
 
+/* Default value for GPU. */
+#define NUM_SAMPLES 200
+#define THREADS_PER_BLOCK 512
+#define MAX_NUM_BLOCK 200
+
 /* Default value for Freq, BW, and gain. */
 #define FREQ_DEFAULT1 64.0
 #define FREQ_DEFAULT2 128.0
@@ -48,8 +53,9 @@
 #define GAIN_MAX 30
 #define GAIN_MIN -30
 
-namespace Ui {
-class MainApp;
+namespace Ui
+{
+    class MainApp;
 }
 
 class MainApp : public QMainWindow
@@ -67,6 +73,8 @@ private slots:
     void on_fileSelectButton_clicked();
 
     void on_processButton_clicked();
+
+    void on_numSampleBox_editingFinished();
 
     void on_threadsBlockBox_editingFinished();
 
@@ -138,16 +146,17 @@ private:
     // The Qt UI to set up
     Ui::MainApp *ui;
 
-    // Timer to query the samples played by the
-    // equalizer.
+    // Timer to query the samples played by the equalizer.
     QTimer *timer;
 
     // Timers for data plotting.
     QTimer *plotTimer;
     QTimer *elapseTimer;
 
-    int threadNumPerBlock = 512;
-    int maxNumBlock = 200;
+    // Variables for GPU backend.
+    int numSamples = NUM_SAMPLES;
+    int threadNumPerBlock = THREADS_PER_BLOCK;
+    int maxNumBlock = MAX_NUM_BLOCK;
 
     // Keep track of current freq and bw values
     int dialValue[KNOB_SET * 2];
@@ -155,15 +164,23 @@ private:
     // Keep track of current gain values
     int gain[KNOB_SET];
 
+    // Use to convert audio play time to string that makes sense.
     QString calculateTimeString(int time);
     void setTimeString();
+
+    // Use to connect knob variables frontend to backend.
     void initBoundDial(QDial *currDial, int idx);
     void initDials();
-    void initPlot();
     void setKnobValue(int knobNum, int direction);
+
+    // Set up real-time data plotting.
+    void initPlot();
     void initWindow();
     void freeFilterProperties();
     void initiateProcessing();
+
+    // Use to update filters by creating new ones to replace the
+    // current ones.
     void updateFilter(int filterNum, int newGain, int newFreq,
         int newBW, bool cut);
 };
