@@ -50,10 +50,6 @@
 #define GAIN_DEFAULT5 0.0
 #define GAIN_DEFAULT6 0.0
 
-/* How much change for each twist in knob. */
-#define KNOB_MIN 10 // Should be > 0
-#define KNOB_MAX 22000
-
 namespace Ui
 {
     class MainApp;
@@ -171,7 +167,7 @@ private:
     void setTimeString();
 
     // Use to connect knob variables frontend to backend.
-    void initBoundDial(QDial *currDial, int idx);
+    void initBoundDial(QCustomDial *currDial, int idx);
     void initDials();
     void setKnobValue(int knobNum, int val);
     void setGainValue(int filterNum, int val);

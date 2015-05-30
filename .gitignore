@@ -5,5 +5,6 @@
 *.pro.user
 moc_mainapp.cpp
 moc_qcustomplot.cpp
+moc_qcustomdial.cpp
 ui_mainapp.h
 

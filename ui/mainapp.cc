@@ -95,31 +95,14 @@ MainApp::MainApp(QWidget *parent) :
     initWindow();
 }
 
-void MainApp::initBoundDial(QDial *currDial, int idx)
+void MainApp::initBoundDial(QCustomDial *currDial, int idx)
 {
-    currDial->setValue(dialValue[idx]);
-    currDial->setMinimum(KNOB_MIN);
-    currDial->setMaximum(KNOB_MAX);
-    currDial->setWrapping(false);
+    currDial->setFrequency(dialValue[idx]);
 }
 
 void MainApp::initDials()
 {
-    // Set default for freq and bandwidth
-    ui->lcdNumber_7->display((int)FREQ_DEFAULT1);
-    ui->lcdNumber_8->display((int)FREQ_DEFAULT2);
-    ui->lcdNumber_9->display((int)FREQ_DEFAULT3);
-    ui->lcdNumber_10->display((int)FREQ_DEFAULT4);
-    ui->lcdNumber_11->display((int)FREQ_DEFAULT5);
-    ui->lcdNumber_12->display((int)FREQ_DEFAULT6);
-
-    ui->lcdNumber_13->display((int)BW_DEFAULT1);
-    ui->lcdNumber_14->display((int)BW_DEFAULT2);
-    ui->lcdNumber_15->display((int)BW_DEFAULT3);
-    ui->lcdNumber_16->display((int)BW_DEFAULT4);
-    ui->lcdNumber_17->display((int)BW_DEFAULT5);
-    ui->lcdNumber_18->display((int)BW_DEFAULT6);
-
+    // Set default values for freq and bandwidth
     dialValue[0] = (int)FREQ_DEFAULT1;
     dialValue[1] = (int)FREQ_DEFAULT2;
     dialValue[2] = (int)FREQ_DEFAULT3;
@@ -134,43 +117,43 @@ void MainApp::initDials()
     dialValue[11] = (int)BW_DEFAULT6;
 
     // Set dial properties
-    initBoundDial(ui->dial, 0);
-    initBoundDial(ui->dial_2, 1);
-    initBoundDial(ui->dial_3, 2);
-    initBoundDial(ui->dial_4, 3);
-    initBoundDial(ui->dial_5, 4);
-    initBoundDial(ui->dial_6, 5);
-    initBoundDial(ui->dial_7, 6);
-    initBoundDial(ui->dial_8, 7);
-    initBoundDial(ui->dial_9, 8);
-    initBoundDial(ui->dial_10, 9);
-    initBoundDial(ui->dial_11, 10);
-    initBoundDial(ui->dial_12, 11);
+    initBoundDial(ui->freq_dial_1, 0);
+    initBoundDial(ui->freq_dial_2, 1);
+    initBoundDial(ui->freq_dial_3, 2);
+    initBoundDial(ui->freq_dial_4, 3);
+    initBoundDial(ui->freq_dial_5, 4);
+    initBoundDial(ui->freq_dial_6, 5);
+    initBoundDial(ui->bw_dial_1, 6);
+    initBoundDial(ui->bw_dial_2, 7);
+    initBoundDial(ui->bw_dial_3, 8);
+    initBoundDial(ui->bw_dial_4, 9);
+    initBoundDial(ui->bw_dial_5, 10);
+    initBoundDial(ui->bw_dial_6, 11);
 
     // Set connection for freq and bandwidth
-    connect(ui->dial, SIGNAL(sliderMoved(int)), this,
+    connect(ui->freq_dial_1, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob1(int)));
-    connect(ui->dial_2, SIGNAL(sliderMoved(int)), this,
+    connect(ui->freq_dial_2, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob2(int)));
-    connect(ui->dial_3, SIGNAL(sliderMoved(int)), this,
+    connect(ui->freq_dial_3, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob3(int)));
-    connect(ui->dial_4, SIGNAL(sliderMoved(int)), this,
+    connect(ui->freq_dial_4, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob4(int)));
-    connect(ui->dial_5, SIGNAL(sliderMoved(int)), this,
+    connect(ui->freq_dial_5, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob5(int)));
-    connect(ui->dial_6, SIGNAL(sliderMoved(int)), this,
+    connect(ui->freq_dial_6, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob6(int)));
-    connect(ui->dial_7, SIGNAL(sliderMoved(int)), this,
+    connect(ui->bw_dial_1, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob7(int)));
-    connect(ui->dial_8, SIGNAL(sliderMoved(int)), this,
+    connect(ui->bw_dial_2, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob8(int)));
-    connect(ui->dial_9, SIGNAL(sliderMoved(int)), this,
+    connect(ui->bw_dial_3, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob9(int)));
-    connect(ui->dial_10, SIGNAL(sliderMoved(int)), this,
+    connect(ui->bw_dial_4, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob10(int)));
-    connect(ui->dial_11, SIGNAL(sliderMoved(int)), this,
+    connect(ui->bw_dial_5, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob11(int)));
-    connect(ui->dial_12, SIGNAL(sliderMoved(int)), this,
+    connect(ui->bw_dial_6, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob12(int)));
 }
 
@@ -230,7 +213,7 @@ void MainApp::initWindow()
     // Set window name
     QMainWindow::setWindowTitle("GPU EQ");
     QMainWindow::setFixedWidth(1020);
-    QMainWindow::setFixedHeight(560);
+    QMainWindow::setFixedHeight(510);
     ui->label->setAlignment(Qt::AlignRight);
 
     // Find gui path for logo
@@ -238,7 +221,7 @@ void MainApp::initWindow()
         0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
 
     // Get logo
-    QPixmap logo(guiPath + "gpu_logo.gif");
+    QPixmap logo(guiPath + "gpuLogo_small_blue.png");
     ui->appLogo->setPixmap(logo);
 
     // Num samples, threads / block and max block adjustables
@@ -284,62 +267,6 @@ void MainApp::initWindow()
     gain[3] = (int)GAIN_DEFAULT4;
     gain[4] = (int)GAIN_DEFAULT5;
     gain[5] = (int)GAIN_DEFAULT6;
-
-    // Update all sliders so they have a custom look. 
-    
-    QString styleSheetHorizontal =
-        QString("QSlider::groove:horizontal {") +
-        QString("   border: 1px solid #222222;") +
-        QString("   width: 629px; /* subtracted off border */") +
-        QString("   height: 2px; /* fixed size for groove */") +
-        QString("   margin: 2px 0;") +
-        QString("   border-radius: 3px;") +
-        QString("} ") +
-        QString("QSlider::handle:horizontal {") +
-        QString("   background-color: #eeeeee;") +
-        QString("   border: 1px solid #777777;") +
-        QString("   width: 8px;") +
-        QString("   margin: -4px 0; /* Expand outside the groove */") +
-        QString("   border-radius: 3px;") +
-        QString("} ") +
-        QString("QSlider::add-page:horizontal { /* Before handler */") +
-        QString("   background-color: #777777;") +
-        QString("   margin: 2px 0;") +
-        QString("}") +
-        QString("QSlider::sub-page:horizontal { /* After handler */") +
-        QString("   background-color: #eeeeee;") +
-        QString("   margin: 2px 0;") +
-        QString("} ");
-
-    QString styleSheetVertical =
-        QString("QSlider::groove:vertical {") +
-        QString("   border: 1px solid #222222;") +
-        QString("   height: 250px; /* subtracted off border */") +
-        QString("   width: 2px; /* fixed size for groove */") +
-        QString("   border-radius: 3px;") +
-        QString("} ") +
-        QString("QSlider::handle:vertical {") +
-        QString("   background-color: #eeeeee;") +
-        QString("   border: 1px solid #777777;") +
-        QString("   height: 8px;") +
-        QString("   margin: 0 -4px; /* Expand outside the groove */") +
-        QString("   border-radius: 3px;") +
-        QString("} ") +
-        QString("QSlider::add-page:vertical { /* Before handler */") +
-        QString("   background-color: #eeeeee;") +
-        QString("} ") +
-        QString("QSlider::sub-page:vertical { /* After handler */") +
-        QString("   background-color: #777777;") +
-        QString("} ");
-
-    ui->progressBar->setStyleSheet(styleSheetHorizontal);
-    
-    ui->verticalSlider->setStyleSheet(styleSheetVertical);
-    ui->verticalSlider_2->setStyleSheet(styleSheetVertical);
-    ui->verticalSlider_3->setStyleSheet(styleSheetVertical);
-    ui->verticalSlider_4->setStyleSheet(styleSheetVertical);
-    ui->verticalSlider_5->setStyleSheet(styleSheetVertical);
-    ui->verticalSlider_6->setStyleSheet(styleSheetVertical);
 
     initPlot();
 
@@ -472,17 +399,20 @@ void MainApp::setNewDuration(float newDuration)
  */
 void MainApp::on_fileSelectButton_clicked()
 {
-    cout << "HELLO" << endl;
-
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Open WAV file for test"), tr("Audio files (*.wav)"));
-
+    
     // Check for .wav or .WAV extension
-    if ((!filename.isEmpty() &&
-        !(filename.contains(".wav") || filename.contains(".WAV"))) )
+    if (filename.isEmpty() || 
+        !(filename.contains(".wav") || filename.contains(".WAV")) )
     {
-        QMessageBox::information(this, tr("Error On Selection"),
-            "File name \"" + filename + "\" is not a valid WAV file!");
+        // Display an error message only if a file wasn't selected.
+        if (!filename.isEmpty())
+        {
+            QMessageBox::information(this, tr("Invalid File Format"),
+                "\"" + filename + "\" is not a valid WAV file!");
+        }
+        
         // Set filename to none
         filename = "";
     }
@@ -511,53 +441,14 @@ void MainApp::on_fileSelectButton_clicked()
  */
 void MainApp::setKnobValue(int knobNum, int val)
 {
-    // Find the right label to update
-    QLCDNumber *currLCD;
-    switch(knobNum)
-    {
-        case 0:
-            currLCD = ui->lcdNumber_7;
-            break;
-        case 1:
-            currLCD = ui->lcdNumber_8;
-            break;
-        case 2:
-            currLCD = ui->lcdNumber_9;
-            break;
-        case 3:
-            currLCD = ui->lcdNumber_10;
-            break;
-        case 4:
-            currLCD = ui->lcdNumber_11;
-            break;
-        case 5:
-            currLCD = ui->lcdNumber_12;
-            break;
-        case 6:
-            currLCD = ui->lcdNumber_13;
-            break;
-        case 7:
-            currLCD = ui->lcdNumber_14;
-            break;
-        case 8:
-            currLCD = ui->lcdNumber_15;
-            break;
-        case 9:
-            currLCD = ui->lcdNumber_16;
-            break;
-        case 10:
-            currLCD = ui->lcdNumber_17;
-            break;
-        case 11:
-            currLCD = ui->lcdNumber_18;
-            break;
-        default:
-            currLCD = ui->lcdNumber_7;
-    }
-
-    dialValue[knobNum] = val;
-    currLCD->display(dialValue[knobNum]);
-
+    // Frequency = FREQ_MULT * LOG_BASE^(knobValue / EXP_DIV)
+    dialValue[knobNum] = std::round(QCustomDial::FREQ_MULT * 
+            std::pow(QCustomDial::LOG_BASE, val / QCustomDial::EXP_DIV));
+    
+    // cout << "Set dialValue[" << knobNum << "] to " << dialValue[knobNum]
+    //    << endl;
+    
+    // Find the corresponding filter number that's been affected.
     int filterNum;
 
     if(knobNum >= NUM_FILTERS)
@@ -617,37 +508,8 @@ void MainApp::setGainValue(int filterNum, int val)
                     std::to_string(filters[filterNum].type));
     }
     
-    // Update gain array and UI.
+    // Update gain array.
     gain[filterNum] = val;
-
-    QLCDNumber *currLCD;
-    switch(filterNum)
-    {
-        case 0:
-            currLCD = ui->lcdNumber_1;
-            break;
-        case 1:
-            currLCD = ui->lcdNumber_2;
-            break;
-        case 2:
-            currLCD = ui->lcdNumber_3;
-            break;
-        case 3:
-            currLCD = ui->lcdNumber_4;
-            break;
-        case 4:
-            currLCD = ui->lcdNumber_5;
-            break;
-        case 5:
-            currLCD = ui->lcdNumber_6;
-            break;
-        
-        default:
-            throw std::invalid_argument("Invalid gain LCD number: " +
-                    std::to_string(filterNum));
-    }
-
-    currLCD->display(val);
    
     // Update back-end filters.
     updateFilter(filterNum,                             /* filterNum */ 
