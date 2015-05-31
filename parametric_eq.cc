@@ -355,6 +355,10 @@ void ParametricEQ::setMaxBlocks(uint16_t maxBlocks)
                                          threadsPerBlock));
 }
 
+EQStream * ParametricEQ::getSoundStream()
+{
+    return soundStream;
+}
 
 int16_t * ParametricEQ::getHostOutputAudioBuf()
 {

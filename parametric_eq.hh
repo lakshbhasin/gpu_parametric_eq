@@ -95,9 +95,6 @@ private:
     // The buffer we'll use to load sound into.
     sf::SoundBuffer *buffer = NULL;
 
-    // The sound stream that we'll load audio into while buffering.
-    EQStream *soundStream = NULL;
-
     // Tracks whether we've completed the first process call to
     // processAudio() for this song. This will signal the first playback.
     bool doneWithFirstProcessCall = false;
@@ -148,7 +145,10 @@ private:
     // An array of CUDA streams. Each stream will process one channel's
     // data.
     cudaStream_t *streams = NULL;
-    
+
+    // The sound stream that we'll load audio into while buffering.
+    EQStream *soundStream = NULL;
+
     // An array of forward and inverse FFT plans. Each plan will handle one
     // channel's data.
     cufftHandle *forwardPlans = NULL;
@@ -224,6 +224,7 @@ public:
     uint32_t getNumBufSamples();
     float getPlayedTime();
     Filter *getCurrentFilter();
+    EQStream * getSoundStream();
 
     // Song playback functions
     void startProcessingSound();

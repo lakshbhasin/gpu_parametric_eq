@@ -925,6 +925,8 @@ void MainApp::initWindow()
     gain[4] = (int)GAIN_DEFAULT5;
     gain[5] = (int)GAIN_DEFAULT6;
 
+    ui->saveButton->setEnabled(false);
+
     initPlot();
 
     initDeviceMeta();
@@ -1122,6 +1124,8 @@ void MainApp::setNewDuration(float newDuration)
  */
 void MainApp::on_fileSelectButton_clicked()
 {
+    lastProcessedSamples.clear();
+    ui->saveButton->setEnabled(false);
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Select a WAV file"), tr("Audio files (*.wav)"));
     
@@ -1157,6 +1161,32 @@ void MainApp::on_fileSelectButton_clicked()
 
         // Set song properties.
         setSongProperties();
+    }
+}
+
+
+/**
+ * This function responds to the "Browse" button being pressed.
+ */
+void MainApp::on_saveButton_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(
+        this, tr("Save to a WAV file"), "", tr("Audio files (*.wav)"));
+
+    // Check for .wav or .WAV extension
+    if (filename.isEmpty() ||
+        !(filename.contains(".wav") || filename.contains(".WAV")) )
+    {
+        // Display an error message only if a file wasn't selected.
+        if (!filename.isEmpty())
+        {
+            QMessageBox::information(this, tr("Invalid File Format"),
+                "\"" + filename + "\" is not a valid WAV file path!");
+        }
+    }
+    else
+    {
+        saveAudio(filename);
     }
 }
 
@@ -1459,6 +1489,19 @@ void MainApp::on_processButton_clicked()
 
     if (processing)
     {
+        // If we were processing and we stop, then we store the
+        // current output data because destroy so we can save it
+        // to audio file if needed.
+        lastProcessedSamples.clear();
+        for (unsigned k = 0;
+            k < paramEQ->getSoundStream()->processedSamples.size(); k++)
+        {
+            lastProcessedSamples.push_back(
+                paramEQ->getSoundStream()->processedSamples[k]);
+        }
+
+        ui->saveButton->setEnabled(true);
+
         // Stop processing.
         paramEQ->stopProcessingSound();
 
@@ -1684,6 +1727,61 @@ void MainApp::freeFilterProperties()
     }
 }
 
+
+/**
+  * Helper function to save processed audio data to file.
+  */
+void MainApp::saveAudio(QString filename)
+{
+    char * path = filename.toLocal8Bit().data();
+    struct waveFile WAV;
+    struct waveFile *ptrWav; // pointer to struct
+    ptrWav = &WAV;
+    // collect header info
+    ptrWav->chunkID[0] = 'R';
+    ptrWav->chunkID[1] = 'I';
+    ptrWav->chunkID[2] = 'F';
+    ptrWav->chunkID[3] = 'F';
+
+    ptrWav->fileLength = lastProcessedSamples.size() *
+        sizeof(int16_t) * (int)(paramEQ->getSong()->bitsPerSample / 8) +
+        36; // 44 byte header + data - 8
+    ptrWav->typeID[0] = 'W';
+    ptrWav->typeID[1] = 'A';
+    ptrWav->typeID[2] = 'V';
+    ptrWav->typeID[3] = 'E';
+    ptrWav->subchunk1ID[0] = 'f';
+    ptrWav->subchunk1ID[1] = 'm';
+    ptrWav->subchunk1ID[2] = 't';
+    ptrWav->subchunk1ID[3] = ' ';
+
+    ptrWav->subchunk1Size = 16;
+    ptrWav->audioFormat = 1;
+    ptrWav->noOfChannels = paramEQ->getSong()->numChannels;
+    ptrWav->fs = paramEQ->getSong()->samplingRate;
+    ptrWav->bitsPerSample = paramEQ->getSong()->bitsPerSample;
+    ptrWav->bytesPerSample = (int)(ptrWav->bitsPerSample / 8);
+    ptrWav->byteRate = ptrWav->fs *
+        ptrWav->noOfChannels * ptrWav->bytesPerSample;
+
+    ptrWav->subchunk2ID[0] = 'd';
+    ptrWav->subchunk2ID[1] = 'a';
+    ptrWav->subchunk2ID[2] = 't';
+    ptrWav->subchunk2ID[3] = 'a';
+    ptrWav->subchunk2Size = lastProcessedSamples.size() *
+        sizeof(uint16_t) * ptrWav->bytesPerSample;
+
+    // Write to file
+    FILE *fid;
+    fid = fopen(path, "w");
+    // Write simple 44 byte header to file
+    fwrite(ptrWav->chunkID, 1, 44, fid);
+    // Write data to file
+    fwrite(&lastProcessedSamples[0], ptrWav->bytesPerSample,
+        lastProcessedSamples.size() * sizeof(int16_t), fid);
+
+    fclose(fid);
+}
 
 /** Destructor **/
 MainApp::~MainApp()

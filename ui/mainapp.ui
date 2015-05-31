@@ -2268,6 +2268,40 @@ p, li { white-space: pre-wrap; }
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QPushButton" name="saveButton">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>50</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget
+{
+	background-color: rgb(27, 43, 55);
+}
+
+QWidget::!enabled
+{
+	background-color: rgb(32, 32, 32);
+        color: rgb(50, 50, 50);
+}</string>
+    </property>
+    <property name="text">
+     <string>Save</string>
+    </property>
+   </widget>
    <zorder>fileSelectButton</zorder>
    <zorder>textEdit</zorder>
    <zorder>processButton</zorder>
@@ -2327,6 +2361,7 @@ p, li { white-space: pre-wrap; }
    <zorder>filter4Logo</zorder>
    <zorder>filter5Logo</zorder>
    <zorder>filter6Logo</zorder>
+   <zorder>saveButton</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -2334,7 +2369,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>1020</width>
-     <height>16</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
@@ -2357,3 +2392,4 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections/>
 </ui>
+
