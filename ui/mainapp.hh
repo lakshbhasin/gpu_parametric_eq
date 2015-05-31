@@ -32,6 +32,15 @@
 #define THREADS_PER_BLOCK 512
 #define MAX_NUM_BLOCK 200
 
+/* Default value for filters. */
+/* 0 = high, 1 = band/cut, 2 = low. */
+#define DEFAULT_FILTER_TYPE1 2
+#define DEFAULT_FILTER_TYPE2 1
+#define DEFAULT_FILTER_TYPE3 1
+#define DEFAULT_FILTER_TYPE4 1
+#define DEFAULT_FILTER_TYPE5 1
+#define DEFAULT_FILTER_TYPE6 0
+
 /* Default value for Freq, BW, and gain. */
 #define FREQ_DEFAULT1 64.0
 #define FREQ_DEFAULT2 128.0
@@ -61,6 +70,23 @@ namespace Ui
 {
     class MainApp;
 }
+
+
+/** This class re-definition is needed for QComboBox
+  * to be redefined for our new CSS
+  */
+class SelectionKillerDelegate : public QItemDelegate
+{
+    virtual void paint(QPainter *painter,
+        const QStyleOptionViewItem &option,
+        const QModelIndex &index) const override
+     {
+         QStyleOptionViewItem myOption = option;
+         myOption.state &= (~QStyle::State_Selected);
+         QItemDelegate::paint (painter, myOption, index);
+     }
+ };
+
 
 
 class MainApp : public QMainWindow
@@ -105,6 +131,19 @@ private slots:
     void twistKnob10(int value);
     void twistKnob11(int value);
     void twistKnob12(int value);
+
+    void showDropdown1();
+    void showDropdown2();
+    void showDropdown3();
+    void showDropdown4();
+    void showDropdown5();
+    void showDropdown6();
+    void selectFilter1(int val);
+    void selectFilter2(int val);
+    void selectFilter3(int val);
+    void selectFilter4(int val);
+    void selectFilter5(int val);
+    void selectFilter6(int val);
 
 private:
 
@@ -171,6 +210,9 @@ private:
     // Keep track of current gain values
     int gain[NUM_FILTERS];
 
+    // Store current filter types
+    int filterType[NUM_FILTERS];
+
     // Use to convert audio play time to string that makes sense.
     QString calculateTimeString(float timeFloat);
     void setTimeString();
@@ -187,6 +229,9 @@ private:
     void initDeviceMeta();
     void setSongProperties();
     void initWindow();
+
+    void setupFilterLogos(QString guiPath);
+    QIcon getImageType(int type, QString guiPath);
 
     void freeFilterProperties();
 

@@ -94,6 +94,154 @@ MainApp::MainApp(QWidget *parent) :
     initWindow();
 }
 
+/**
+  * Helper function to return the correct QIcon for a
+  * request based on specific filter type.
+  */
+QIcon MainApp::getImageType(int type, QString guiPath)
+{
+    QPixmap filterLogo;
+    if (type == 0)
+    {
+        // high sheiving
+        filterLogo = QPixmap(guiPath + "rising_big.png");
+    }
+    else if (type == 1)
+    {
+        // peak
+        filterLogo = QPixmap(guiPath + "peak_big.png");
+    }
+    else
+    {
+        // low sheiving
+        filterLogo = QPixmap(guiPath + "falling_big.png");
+    }
+    QIcon filterIcon(filterLogo);
+
+    return filterIcon;
+}
+
+/**
+  * A serious of SLOT functions to change filter logo and
+  * filterType values to store when the dropdown menu is
+  * activated.
+  */
+void MainApp::selectFilter1(int val)
+{
+    QString guiPath = QDir::currentPath().mid(
+        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
+    QIcon newFilter = getImageType(val, guiPath);
+    filterType[0] = val;
+    ui->filter1Logo->setIcon(newFilter);
+}
+
+void MainApp::selectFilter2(int val)
+{
+    QString guiPath = QDir::currentPath().mid(
+        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
+    QIcon newFilter = getImageType(val, guiPath);
+    filterType[1] = val;
+    ui->filter2Logo->setIcon(newFilter);
+}
+
+void MainApp::selectFilter3(int val)
+{
+    QString guiPath = QDir::currentPath().mid(
+        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
+    QIcon newFilter = getImageType(val, guiPath);
+    filterType[2] = val;
+    ui->filter3Logo->setIcon(newFilter);
+}
+
+void MainApp::selectFilter4(int val)
+{
+    QString guiPath = QDir::currentPath().mid(
+        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
+    QIcon newFilter = getImageType(val, guiPath);
+    filterType[3] = val;
+    ui->filter4Logo->setIcon(newFilter);
+}
+
+void MainApp::selectFilter5(int val)
+{
+    QString guiPath = QDir::currentPath().mid(
+        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
+    QIcon newFilter = getImageType(val, guiPath);
+    filterType[4] = val;
+    ui->filter5Logo->setIcon(newFilter);
+}
+
+void MainApp::selectFilter6(int val)
+{
+    QString guiPath = QDir::currentPath().mid(
+        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
+    QIcon newFilter = getImageType(val, guiPath);
+    filterType[5] = val;
+    ui->filter6Logo->setIcon(newFilter);
+}
+
+/**
+  * One of the initializing functions to set up all filters at the
+  * start of the program and to connect them to back-end SIGNALS and SLOTS.
+  */
+void MainApp::setupFilterLogos(QString guiPath)
+{
+    filterType[0] = DEFAULT_FILTER_TYPE1;
+    filterType[1] = DEFAULT_FILTER_TYPE2;
+    filterType[2] = DEFAULT_FILTER_TYPE3;
+    filterType[3] = DEFAULT_FILTER_TYPE4;
+    filterType[4] = DEFAULT_FILTER_TYPE5;
+    filterType[5] = DEFAULT_FILTER_TYPE6;
+
+    ui->comboBox->setItemDelegate (new SelectionKillerDelegate);
+    ui->comboBox_2->setItemDelegate (new SelectionKillerDelegate);
+    ui->comboBox_3->setItemDelegate (new SelectionKillerDelegate);
+    ui->comboBox_4->setItemDelegate (new SelectionKillerDelegate);
+    ui->comboBox_5->setItemDelegate (new SelectionKillerDelegate);
+    ui->comboBox_6->setItemDelegate (new SelectionKillerDelegate);
+
+    ui->comboBox->insertItem(0, getImageType(0, guiPath), "High");
+    ui->comboBox->insertItem(1, getImageType(1, guiPath), "Band");
+    ui->comboBox->insertItem(2, getImageType(2, guiPath), "Low");
+    ui->comboBox_2->insertItem(0, getImageType(0, guiPath), "High");
+    ui->comboBox_2->insertItem(1, getImageType(1, guiPath), "Band");
+    ui->comboBox_2->insertItem(2, getImageType(2, guiPath), "Low");
+    ui->comboBox_3->insertItem(0, getImageType(0, guiPath), "High");
+    ui->comboBox_3->insertItem(1, getImageType(1, guiPath), "Band");
+    ui->comboBox_3->insertItem(2, getImageType(2, guiPath), "Low");
+    ui->comboBox_4->insertItem(0, getImageType(0, guiPath), "High");
+    ui->comboBox_4->insertItem(1, getImageType(1, guiPath), "Band");
+    ui->comboBox_4->insertItem(2, getImageType(2, guiPath), "Low");
+    ui->comboBox_5->insertItem(0, getImageType(0, guiPath), "High");
+    ui->comboBox_5->insertItem(1, getImageType(1, guiPath), "Band");
+    ui->comboBox_5->insertItem(2, getImageType(2, guiPath), "Low");
+    ui->comboBox_6->insertItem(0, getImageType(0, guiPath), "High");
+    ui->comboBox_6->insertItem(1, getImageType(1, guiPath), "Band");
+    ui->comboBox_6->insertItem(2, getImageType(2, guiPath), "Low");
+
+    ui->filter1Logo->setIcon(getImageType(filterType[0], guiPath));
+    ui->filter2Logo->setIcon(getImageType(filterType[1], guiPath));
+    ui->filter3Logo->setIcon(getImageType(filterType[2], guiPath));
+    ui->filter4Logo->setIcon(getImageType(filterType[3], guiPath));
+    ui->filter5Logo->setIcon(getImageType(filterType[4], guiPath));
+    ui->filter6Logo->setIcon(getImageType(filterType[5], guiPath));
+
+    connect(ui->filter1Logo, SIGNAL(clicked()), this, SLOT(showDropdown1()));
+    connect(ui->filter2Logo, SIGNAL(clicked()), this, SLOT(showDropdown2()));
+    connect(ui->filter3Logo, SIGNAL(clicked()), this, SLOT(showDropdown3()));
+    connect(ui->filter4Logo, SIGNAL(clicked()), this, SLOT(showDropdown4()));
+    connect(ui->filter5Logo, SIGNAL(clicked()), this, SLOT(showDropdown5()));
+    connect(ui->filter6Logo, SIGNAL(clicked()), this, SLOT(showDropdown6()));
+
+    connect(ui->comboBox, SIGNAL(activated(int)), this, SLOT(selectFilter1(int)));
+    connect(ui->comboBox_2, SIGNAL(activated(int)), this, SLOT(selectFilter2(int)));
+    connect(ui->comboBox_3, SIGNAL(activated(int)), this, SLOT(selectFilter3(int)));
+    connect(ui->comboBox_4, SIGNAL(activated(int)), this, SLOT(selectFilter4(int)));
+    connect(ui->comboBox_5, SIGNAL(activated(int)), this, SLOT(selectFilter5(int)));
+    connect(ui->comboBox_6, SIGNAL(activated(int)), this, SLOT(selectFilter6(int)));
+    //connect(ui->filter1Logo, SIGNAL(clicked()), ui->comboBox, SLOT(showPopup()));
+}
+
 void MainApp::initBoundDial(QCustomDial *currDial, int idx)
 {
     currDial->setFrequency(dialValue[idx]);
@@ -257,7 +405,7 @@ void MainApp::initPlot()
     // Let the x-axis cover the entire possible frequency range (based on
     // the knobs). Leave some padding for labels.
     ui->customPlot->xAxis->setRange(minFreq, maxFreq);
-    
+
     /* End axis configuration */
     
     // Disable all interactions.
@@ -427,6 +575,9 @@ void MainApp::initWindow()
     QPixmap logo(guiPath + "gpuLogo_small_blue.png");
     ui->appLogo->setPixmap(logo);
 
+    // Set up logos for filters
+    setupFilterLogos(guiPath);
+
     // Num samples, threads / block and max block adjustables
     ui->numSampleBox->setMinimum(1024);
     ui->numSampleBox->setMaximum(65536);
@@ -474,6 +625,36 @@ void MainApp::initWindow()
     initPlot();
 
     initDeviceMeta();
+}
+
+void MainApp::showDropdown1()
+{
+    ui->comboBox->showPopup();
+}
+
+void MainApp::showDropdown2()
+{
+    ui->comboBox_2->showPopup();
+}
+
+void MainApp::showDropdown3()
+{
+    ui->comboBox_3->showPopup();
+}
+
+void MainApp::showDropdown4()
+{
+    ui->comboBox_4->showPopup();
+}
+
+void MainApp::showDropdown5()
+{
+    ui->comboBox_5->showPopup();
+}
+
+void MainApp::showDropdown6()
+{
+    ui->comboBox_6->showPopup();
 }
 
 /**
@@ -540,7 +721,8 @@ void MainApp::setSongProperties()
     QString fileSize;
     // Get overall size of the song in bytes
     int overallSize = song->actualSize + 36;
-    fileSize = QString::number((double)overallSize / 1.0e6, 'f', 2);
+    // 1 MB = (1024 * 1024) bytes
+    fileSize = QString::number((double)overallSize / (1024 * 1024), 'f', 2);
     fileSize = "File Size: " + fileSize + " MB";
 
     QString numCh = QString::number(song->numChannels);
