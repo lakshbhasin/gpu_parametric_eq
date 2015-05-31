@@ -521,6 +521,21 @@ background-color: rgb(56, 74, 85);
 QSlider::sub-page:vertical
 {
 background-color: rgb(29, 45, 56);
+}
+
+/* Disabled slider colors */
+QSlider::handle:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+border: 2px solid rgb(50, 50, 50);
+}
+QSlider::add-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+}
+QSlider::sub-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
 }</string>
 </property>
 <property name="minimum">
@@ -592,6 +607,20 @@ background-color: rgb(56, 74, 85);
 QSlider::sub-page:vertical
 {
 background-color: rgb(29, 45, 56);
+}
+/* Disabled slider colors */
+QSlider::handle:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+border: 2px solid rgb(50, 50, 50);
+}
+QSlider::add-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+}
+QSlider::sub-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
 }</string>
 </property>
 <property name="minimum">
@@ -663,6 +692,20 @@ background-color: rgb(56, 74, 85);
 QSlider::sub-page:vertical
 {
 background-color: rgb(29, 45, 56);
+}
+/* Disabled slider colors */
+QSlider::handle:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+border: 2px solid rgb(50, 50, 50);
+}
+QSlider::add-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+}
+QSlider::sub-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
 }</string>
 </property>
 <property name="minimum">
@@ -734,6 +777,20 @@ background-color: rgb(56, 74, 85);
 QSlider::sub-page:vertical
 {
 background-color: rgb(29, 45, 56);
+}
+/* Disabled slider colors */
+QSlider::handle:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+border: 2px solid rgb(50, 50, 50);
+}
+QSlider::add-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+}
+QSlider::sub-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
 }</string>
 </property>
 <property name="minimum">
@@ -805,6 +862,20 @@ background-color: rgb(56, 74, 85);
 QSlider::sub-page:vertical
 {
 background-color: rgb(29, 45, 56);
+}
+/* Disabled slider colors */
+QSlider::handle:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+border: 2px solid rgb(50, 50, 50);
+}
+QSlider::add-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+}
+QSlider::sub-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
 }</string>
 </property>
 <property name="minimum">
@@ -876,6 +947,20 @@ background-color: rgb(56, 74, 85);
 QSlider::sub-page:vertical
 {
 background-color: rgb(29, 45, 56);
+}
+/* Disabled slider colors */
+QSlider::handle:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+border: 2px solid rgb(50, 50, 50);
+}
+QSlider::add-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
+}
+QSlider::sub-page:vertical:disabled
+{
+background-color: rgb(32, 32, 32);
 }</string>
 </property>
 <property name="minimum">
