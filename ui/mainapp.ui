@@ -16,8 +16,8 @@
   <property name="styleSheet">
    <string notr="true">QWidget
 {
-	color : rgb(101, 120, 133);
-	background-color : rgb(13, 29, 39);
+  color : rgb(101, 120, 133);
+  background-color : rgb(13, 29, 39);
 }</string>
   </property>
   <property name="toolButtonStyle">
@@ -27,8 +27,8 @@
    <property name="styleSheet">
     <string notr="true">QWidget
 {
-	color : rgb(101, 120, 133);
-	background-color : rgb(13, 29, 39);
+  color : rgb(101, 120, 133);
+  background-color : rgb(13, 29, 39);
 }</string>
    </property>
    <widget class="QPushButton" name="fileSelectButton">
@@ -49,7 +49,7 @@
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="text">
@@ -74,7 +74,7 @@
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(31, 49, 60);
+  background-color: rgb(31, 49, 60);
 }</string>
     </property>
    </widget>
@@ -96,7 +96,7 @@
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="text">
@@ -118,7 +118,7 @@
     <property name="styleSheet">
      <string notr="true">QSlider::groove:horizontal 
 {
-	border: 1px solid #222222;
+  border: 1px solid #222222;
     height: 2px; /* fixed size for groove */
     margin: 2px 0;
     border-radius: 3px;
@@ -126,7 +126,7 @@
 
 QSlider::handle:horizontal 
 {
-	background-color: rgb(29, 45, 56);
+  background-color: rgb(29, 45, 56);
     border: 2px solid rgb(152, 160, 164);
     width: 6px;
     margin: -4px 0; /* Expand outside the groove */
@@ -136,14 +136,14 @@ QSlider::handle:horizontal
 /* Before handler */
 QSlider::add-page:horizontal
 {
-	background-color: rgb(31, 48, 61);
+  background-color: rgb(31, 48, 61);
     margin: 2px 0;
 }
 
 /* After handler */
 QSlider::sub-page:horizontal
 {
-	background-color: rgb(56, 74, 85);
+  background-color: rgb(56, 74, 85);
     margin: 2px 0;
 }</string>
     </property>
@@ -246,8 +246,8 @@ QSlider::sub-page:horizontal
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(31, 49, 60);
-	border-radius: 8px;
+  background-color: rgb(31, 49, 60);
+  border-radius: 8px;
 }</string>
     </property>
     <property name="frameShape">
@@ -270,9 +270,9 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>498</x>
+      <x>488</x>
       <y>451</y>
-      <width>81</width>
+      <width>91</width>
       <height>25</height>
      </rect>
     </property>
@@ -320,7 +320,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="appLogo">
     <property name="geometry">
      <rect>
-      <x>12</x>
+      <x>20</x>
       <y>446</y>
       <width>120</width>
       <height>30</height>
@@ -351,7 +351,7 @@ p, li { white-space: pre-wrap; }
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(31, 49, 60);
+  background-color: rgb(31, 49, 60);
 }</string>
     </property>
    </widget>
@@ -373,7 +373,7 @@ p, li { white-space: pre-wrap; }
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(31, 49, 60);
+  background-color: rgb(31, 49, 60);
 }</string>
     </property>
    </widget>
@@ -1659,7 +1659,7 @@ QSlider::sub-page:vertical
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(31, 49, 60);
+  background-color: rgb(31, 49, 60);
 }</string>
     </property>
    </widget>
@@ -1700,23 +1700,23 @@ QSlider::sub-page:vertical
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }
 
 QComboBox::drop-down
 {
-	/* Helps get rid of the drop-down arrow */
-	border-width: 0px;
-	width: 0px;
+  /* Helps get rid of the drop-down arrow */
+  border-width: 0px;
+  width: 0px;
 }
 
 
 QComboBox::down-arrow
 {
-	width: 0px;
-	/* There's no image called noimg, so the arrow won't show */
-	image: url(noimg);
-	border-width: 0px;
+  width: 0px;
+  /* There's no image called noimg, so the arrow won't show */
+  image: url(noimg);
+  border-width: 0px;
 }</string>
     </property>
     <property name="editable">
@@ -1741,7 +1741,7 @@ QComboBox::down-arrow
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="editable">
@@ -1760,7 +1760,7 @@ QComboBox::down-arrow
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="editable">
@@ -1779,7 +1779,7 @@ QComboBox::down-arrow
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="editable">
@@ -1798,7 +1798,7 @@ QComboBox::down-arrow
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="editable">
@@ -1817,7 +1817,7 @@ QComboBox::down-arrow
     <property name="styleSheet">
      <string notr="true">QWidget
 {
-	background-color: rgb(27, 43, 55);
+  background-color: rgb(27, 43, 55);
 }</string>
     </property>
     <property name="editable">
@@ -1827,7 +1827,7 @@ QComboBox::down-arrow
    <widget class="QTextBrowser" name="textBrowser_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>477</y>
       <width>91</width>
       <height>41</height>
@@ -1906,6 +1906,67 @@ p, li { white-space: pre-wrap; }
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QTextBrowser" name="songBrowser">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>444</y>
+      <width>141</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget
+{
+  background-color: rgb(31, 49, 60);
+  border-radius: 8px;
+}</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="lineWidth">
+     <number>0</number>
+    </property>
+    <property name="html">
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Arial'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;lt;FileSize&amp;gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;lt;NumChannels&amp;gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;lt;SamplingRate&amp;gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&amp;lt;BitsPerSample&amp;gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>421</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Song Properties</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
    <zorder>fileSelectButton</zorder>
    <zorder>textEdit</zorder>
    <zorder>processButton</zorder>
@@ -1957,6 +2018,8 @@ p, li { white-space: pre-wrap; }
    <zorder>textBrowser_2</zorder>
    <zorder>tickLabel_2</zorder>
    <zorder>label_6</zorder>
+   <zorder>songBrowser</zorder>
+   <zorder>label_8</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -1964,7 +2027,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>1020</width>
-     <height>16</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
@@ -1987,3 +2050,4 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections/>
 </ui>
+

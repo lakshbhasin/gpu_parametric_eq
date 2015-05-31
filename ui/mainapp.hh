@@ -185,6 +185,7 @@ private:
     void initPlot();
     
     void initDeviceMeta();
+    void setSongProperties();
     void initWindow();
 
     void freeFilterProperties();

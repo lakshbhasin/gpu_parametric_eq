@@ -476,6 +476,10 @@ void MainApp::initWindow()
     initDeviceMeta();
 }
 
+/**
+  * This helper function retrieves the current device's properties
+  * in "NVidia GPU Properties" section.
+  */
 void MainApp::initDeviceMeta()
 {
     // Find device name
@@ -524,6 +528,33 @@ void MainApp::initDeviceMeta()
         "\n" + version;
 
     ui->textBrowser->setText(metaInfo);
+}
+
+/**
+ * This helper function sets the song properties in the appropriate
+ * display box.
+ */
+void MainApp::setSongProperties()
+{
+    WavData *song = paramEQ->getSong();
+    QString fileSize;
+    // Get overall size of the song in bytes
+    int overallSize = song->actualSize + 36;
+    fileSize = QString::number((double)overallSize / 1.0e6, 'f', 2);
+    fileSize = "File Size: " + fileSize + " MB";
+
+    QString numCh = QString::number(song->numChannels);
+    numCh = "Number of Channels: " + numCh;
+
+    QString samplingRate = QString::number(song->samplingRate);
+    samplingRate = "Sampling Rate: " + samplingRate + " Hz";
+
+    QString bitsPSample = QString::number(song->bitsPerSample);
+    bitsPSample = "Bits Per Sample: " + bitsPSample;
+
+    QString songProp = fileSize + "\n" + numCh + "\n" + samplingRate +
+        "\n" + bitsPSample;
+    ui->songBrowser->setText(songProp);
 }
 
 /**
@@ -634,6 +665,9 @@ void MainApp::on_fileSelectButton_clicked()
         // Read the song's duration and update the time string.
         float newDuration = (paramEQ->getSong())->duration();
         setNewDuration(newDuration);
+
+        // Set song properties.
+        setSongProperties();
     }
 }
 
