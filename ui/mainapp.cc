@@ -1040,7 +1040,7 @@ void MainApp::setSongProperties()
     samplingRate = "Sampling Rate: " + samplingRate + " Hz";
 
     QString bitsPSample = QString::number(song->bitsPerSample);
-    bitsPSample = "Bits Per Sample: " + bitsPSample;
+    bitsPSample = "Bits per Sample: " + bitsPSample;
 
     QString songProp = fileSize + "\n" + numCh + "\n" + samplingRate +
         "\n" + bitsPSample;

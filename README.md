@@ -1,5 +1,6 @@
-# GPU Parametric Equalizer
-A CS 179 project by Laksh Bhasin and Sharon Yang.
+![alt tag](https://github.com/lakshbhasin/gpu_parametric_eq/blob/master/img/gpuLogo_blue.png)
+
+A GPU Parametric Equalizer: CS 179 Project by Laksh Bhasin and Sharon Yang.
 
 
 Overview
