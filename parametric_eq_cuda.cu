@@ -9,10 +9,6 @@
 
 const float PI = 3.14159265358979;
 
-// The maximum frequency considered by our convolution. This is set
-// to avoid artifacts. Front-end code should try not to exceed this.
-const float MAX_FREQ = 18000.0;
-
 
 /**
  * This kernel takes an array of Filters, and creates the appropriate
@@ -50,10 +46,11 @@ void cudaFilterSetupKernel(const Filter *filters,
         // imaginary angular frequency (as desired for s-plane transfer
         // functions). 
         float thisFreq = transFuncInd * transFuncRes;
+        float thisSReal = 2.0 * PI * thisFreq;
         
         cufftComplex s;
         s.x = 0.0;
-        s.y = (double) 2.0 * PI * thisFreq;
+        s.y = thisSReal;
         
         // The output to store in the appropriate index of the transfer
         // function.
@@ -67,15 +64,13 @@ void cudaFilterSetupKernel(const Filter *filters,
         for (int i = 0; i < numFilters; i++)
         {
             Filter thisFilter = filters[i];
-            FilterType thisFilterType = thisFilter.type;
-            
-            cufftComplex sSq;
-            double omegaNought, Q, K, omegaNoughtOvQ, omegaNoughtSq;
+            FilterType thisFilterType = thisFilter.type;  
 
             switch (thisFilterType)
             {
                 case FT_BAND_BOOST:
                 case FT_BAND_CUT:
+                {
                     // For boosts, use the transfer function: 
                     //
                     // H(s) = (s^2 + K * omegaNought/Q * s + omegaNought^2)
@@ -83,28 +78,31 @@ void cudaFilterSetupKernel(const Filter *filters,
                     // 
                     // And use the reciprocal of this for cuts.
                     
-                    omegaNought = (double) thisFilter.bandBCProp->omegaNought;
-                    Q = (double) thisFilter.bandBCProp->Q;
-                    K = (double) thisFilter.bandBCProp->K;
+                    cufftComplex sSq;
+                    float omegaNought, Q, K, omegaNoughtOvQ, omegaNoughtSq;
 
+                    omegaNought = thisFilter.bandBCProp->omegaNought;
+                    Q = thisFilter.bandBCProp->Q;
+                    K = thisFilter.bandBCProp->K;
+                    
                     // Do some precomputation
                     sSq = cuCmulf(s, s);
                     omegaNoughtOvQ = omegaNought / Q;
                     omegaNoughtSq = omegaNought * omegaNought;
-
+                    
                     // The numerator and denominator of the above H(s) for
                     // boosts.
                     cufftComplex numerBoost;
                     cufftComplex denomBoost;
-
+                    
                     numerBoost.x = sSq.x + K * omegaNoughtOvQ * s.x +
                                    omegaNoughtSq;
                     numerBoost.y = sSq.y + K * omegaNoughtOvQ * s.y;
-
+                    
                     denomBoost.x = sSq.x + omegaNoughtOvQ * s.x +
                                    omegaNoughtSq;
                     denomBoost.y = sSq.y + omegaNoughtOvQ * s.y;
-
+                    
                     // If this is a boost, then just add numerBoost /
                     // denomBoost to the output element. Otherwise, if it's
                     // a cut, add the reciprocal of this.
@@ -124,6 +122,72 @@ void cudaFilterSetupKernel(const Filter *filters,
                     output.y *= quot.y;
                     
                     break;
+                }
+
+                case FT_HIGH_SHELF:
+                case FT_LOW_SHELF:
+                {
+                    // The real-valued transfer function for low-shelf
+                    // filters is:
+                    //
+                    // H(s) = 1 + (K - 1) * 
+                    //      {1 - tanh( (|s| - Omega_0) / Omega_BW ) } / 2
+                    //
+                    // For high-shelf filters, we negate the argument to
+                    // the tanh.
+                    
+                    float tanhArg, tanhVal;
+                    float omegaNought, omegaBW, KMinus1;
+                    float positiveExp, negativeExp;
+                    float filterVal;
+
+                    omegaNought = thisFilter.shelvingProp->omegaNought;
+                    omegaBW = thisFilter.shelvingProp->omegaBW;
+                    KMinus1 = thisFilter.shelvingProp->K - 1.0;
+                    
+                    // Calculate the argument to the tanh function.
+                    tanhArg = (thisSReal - omegaNought) / omegaBW;
+
+                    // Negate if this is a high-shelf filter.
+                    if (thisFilterType == FT_HIGH_SHELF)
+                    {
+                        tanhArg *= -1.0;
+                    }
+
+                    // Sometimes there's blow-up to deal with when taking a
+                    // tanh.
+                    if (tanhArg >= 9.0)
+                    {
+                        // tanh(9.0) is pretty much 1.
+                        tanhVal = 1.0;
+                    }
+                    else if (tanhArg <= -9.0)
+                    {
+                        // tanh(-9.0) is pretty much -1.
+                        tanhVal = -1.0;
+                    }
+                    else
+                    {
+                        // Compute tanh efficiently via __expf. Each __expf
+                        // call is supposed to take ~1 clock cycle
+                        // according to the CUDA Programming Guide.
+                        positiveExp = __expf(tanhArg);
+                        negativeExp = __expf(-tanhArg);
+
+                        // tanh(x) = (e^x - e^{-x}) / (e^x + e^{-x})
+                        tanhVal = (positiveExp - negativeExp) / 
+                            (positiveExp + negativeExp);
+                    }
+
+                    filterVal = 1.0 + KMinus1 * (1.0 - tanhVal) / 2.0;
+                    
+                    // Only multiply the real part of the previous transfer
+                    // function by this one (this transfer function is
+                    // purely real).
+                    output.x *= filterVal;
+                    
+                    break;
+                }
                 
                 default:
                     printf("Unknown filter type; exiting");

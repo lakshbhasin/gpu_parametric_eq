@@ -185,14 +185,14 @@ void ParametricEQ::setFilters(const Filter *filters)
             case FT_BAND_BOOST:
             case FT_BAND_CUT:
             {
-                BandBoostCutProp *thisFiltProp = thisFilter.bandBCProp;
+                BandBoostCutProp *bandBCProp = thisFilter.bandBCProp;
                 
                 // Allocate space for this filter's properties on device.
                 gpuErrChk( cudaMalloc((void **) &devFiltProp,
                                       sizeof(BandBoostCutProp)) );
                 
-                // Copy over the data in thisFiltProp
-                gpuErrChk( cudaMemcpy(devFiltProp, thisFiltProp,
+                // Copy over the data in bandBCProp
+                gpuErrChk( cudaMemcpy(devFiltProp, bandBCProp,
                                       sizeof(BandBoostCutProp),
                                       cudaMemcpyHostToDevice) );
                 
@@ -204,6 +204,28 @@ void ParametricEQ::setFilters(const Filter *filters)
                 break;
             }
 
+            case FT_HIGH_SHELF:
+            case FT_LOW_SHELF:
+            {
+                ShelvingProp *shelvingProp = thisFilter.shelvingProp;
+                
+                // Allocate space for this filter's properties on device.
+                gpuErrChk( cudaMalloc((void **) &devFiltProp,
+                                      sizeof(ShelvingProp)) );
+                
+                // Copy over the data in shelvingProp
+                gpuErrChk( cudaMemcpy(devFiltProp, shelvingProp,
+                                      sizeof(ShelvingProp),
+                                      cudaMemcpyHostToDevice) );
+                
+                // Make the host filter point to the device-side
+                // properties.
+                hostFilters[i].shelvingProp = (ShelvingProp *)
+                    devFiltProp;
+                
+                break;
+            }
+            
             default:
                 throw std::invalid_argument("Invalid filter type: " +
                         std::to_string(thisFilter.type));
@@ -650,7 +672,6 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
         { 
             doneWithFirstProcessCall = true;
             
-            // TODO: change?
             uint64_t muSecTillNextPlayCall = 0.5 * bufTimeMuS;
 
             boost::asio::deadline_timer *playTimer = new
@@ -1052,6 +1073,12 @@ void ParametricEQ::freeFilterProperties()
             case FT_BAND_CUT:
                 // Free the BandBoostCutProp on the device side.
                 gpuErrChk( cudaFree(thisFilter.bandBCProp) );
+                break;
+
+            case FT_HIGH_SHELF:
+            case FT_LOW_SHELF:
+                // Free the ShelvingProp on the device side.
+                gpuErrChk( cudaFree(thisFilter.shelvingProp) );
                 break;
 
             default:

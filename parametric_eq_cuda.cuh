@@ -22,7 +22,8 @@
  */
 typedef struct BandBoostCutProp
 {
-    /* omegaNought = 2 pi * f_0, where f_0 is the central frequency of the
+    /* 
+     * omegaNought = 2 pi * f_0, where f_0 is the central frequency of the
      * filter in Hz.
      */
     float omegaNought;
@@ -30,11 +31,52 @@ typedef struct BandBoostCutProp
     /* Q = f_0/BW, where BW is the bandwidth of the filter in Hz. */
     float Q;
 
-    /* K = 10^(G/20), where G (positive) is the desired boost or cut in dB
+    /* 
+     * K = 10^(G/20), where G (positive) is the desired boost or cut in dB
      * (depending on whether this is a boost or cut filter).
      */
     float K;
 } BandBoostProp;
+
+
+/**
+ * This struct represents the properties of a high-shelving or low-shelving
+ * filter. The transfer function equation for this filter is completely
+ * real, and is given by the following function for low-shelf filters:
+ *
+ *      H(s) = 1 + (K - 1) * {1 - tanh( (|s| - Omega_0) / Omega_BW ) } / 2
+ *
+ * Where K = 10^(G/20) (where G here can be negative), Omega_0 = 2 * pi *
+ * f_0, and Omega_BW = 2 * pi * BW. The transfer function for high-shelf
+ * filters is identical, but the argument to the tanh is negated.
+ *
+ * Note that this is mostly a heuristic filter that Laksh came up with.
+ * There's no guarantees that it has nice properties about roll-offs etc.
+ * However, there weren't very many nicely parametrizable filters to use
+ * for low-shelving and high-shelving filters.
+ */
+typedef struct ShelvingProp
+{
+    /*
+     * omegaNought = 2 * pi * f_0, where f_0 is the central frequency of
+     * the filter in Hz.
+     */
+    float omegaNought;
+
+    /* 
+     * omegaBW = 2 * pi * BW, where BW is the bandwidth of the filter in
+     * Hz. (This is technically the "width" over which the filter's
+     * passband transitions to the stopband; it's not a "bandwidth" in the
+     * ordinary sense.
+     */
+    float omegaBW;
+
+    /*
+     * K = 10^(G/20), where G (can be positive or negative) is the desired
+     * gain in dB.
+     */
+    float K;
+} ShelvingProp;
 
 
 /**
@@ -44,7 +86,9 @@ typedef struct BandBoostCutProp
 typedef enum FilterType
 {
     FT_BAND_BOOST,      /* Band-pass boost filter. */
-    FT_BAND_CUT         /* Band-pass cut filter. */
+    FT_BAND_CUT,        /* Band-pass cut filter. */
+    FT_HIGH_SHELF,      /* High-shelving filter. */
+    FT_LOW_SHELF        /* Low-shelving filter. */
 } FilterType;
 
 
@@ -65,7 +109,8 @@ typedef struct Filter
      */
     union 
     {
-        BandBoostCutProp *bandBCProp;       /* FT_BAND_BOOST, FT_BAND_CUT */
+        BandBoostCutProp *bandBCProp;    /* FT_BAND_BOOST, FT_BAND_CUT */
+        ShelvingProp *shelvingProp;      /* FT_HIGH_SHELF, FT_LOW_SHELF */
     };
 
 } Filter;

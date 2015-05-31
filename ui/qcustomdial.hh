@@ -39,18 +39,18 @@ public:
     // the knob are given by FREQ_MULT * LOG_BASE^(knobValue / EXP_DIV),
     // where knobValue is the knob's value (which ranges from KNOB_MIN to
     // KNOB_MAX).
-    static constexpr float FREQ_MULT = 32.0;   
-
+    static constexpr float FREQ_MULT = 16.0;   
+    
     // The base to use for the logarithmically-spaced knobs.
     static constexpr float LOG_BASE = 2.0;
-
+    
     // The number to divide by in the exponent, when computing
     // logarithmically-spaced frequencies.
     static constexpr float EXP_DIV = 50.0;
-
+    
     // The minimum and maximum knob values to allow.
     static constexpr int KNOB_MIN = 0;
-    static constexpr int KNOB_MAX = 450;
+    static constexpr int KNOB_MAX = 500;
     
     explicit QCustomDial(QWidget* parent = nullptr);
     

@@ -5,25 +5,29 @@ MainApp::MainApp(QWidget *parent) :
     ui(new Ui::MainApp)
 {
     // Initialize the ParametricEQ. This first requires initializing
-    // NUM_FILTERS filters. We'll assume band-boost filters for now.
+    // NUM_FILTERS filters. All of these will be boost filters for now,
+    // except for the first and last ones (which will be a low-shelving and
+    // high-shelving filter, respectively).
 
-    // The first filter will initially be at 64 Hz.
+    // The first filter will be a low-shelving filter.
     float freq1 = FREQ_DEFAULT1;           // Hz
     float bandwidth1 = BW_DEFAULT1;        // Hz
-    float gain1 = GAIN_DEFAULT1;           // dB (must be positive)
-    BandBoostCutProp *bandBCProp1 = (BandBoostCutProp *)
-        malloc(sizeof(BandBoostCutProp));
-    bandBCProp1->omegaNought = 2.0 * M_PI * freq1;
-    bandBCProp1->Q = freq1 / bandwidth1;
-    bandBCProp1->K = std::pow(10.0, gain1 / 20.0);
+    float gain1 = GAIN_DEFAULT1;           // dB (can be negative)
+    
+    ShelvingProp *shelvingProp1 = (ShelvingProp *)
+        malloc(sizeof(ShelvingProp));
+    shelvingProp1->omegaNought = 2.0 * M_PI * freq1;
+    shelvingProp1->omegaBW = 2.0 * M_PI * bandwidth1;
+    shelvingProp1->K = std::pow(10.0, gain1/20.0);
 
-    filters[0].type = FT_BAND_BOOST;
-    filters[0].bandBCProp = bandBCProp1;
-
-    // The second filter will initially be at 128 Hz.
+    filters[0].type = FT_LOW_SHELF;
+    filters[0].shelvingProp = shelvingProp1;
+    
+    // The second filter will be a band-boost filter.
     float freq2 = FREQ_DEFAULT2;
     float bandwidth2 = BW_DEFAULT2;
-    float gain2 = GAIN_DEFAULT2;
+    float gain2 = std::fabs(GAIN_DEFAULT2); // must be positive
+    
     BandBoostCutProp *bandBCProp2 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp2->omegaNought = 2.0 * M_PI * freq2;
@@ -33,10 +37,11 @@ MainApp::MainApp(QWidget *parent) :
     filters[1].type = FT_BAND_BOOST;
     filters[1].bandBCProp = bandBCProp2;
     
-    // The third filter will initially be at 256 Hz.
+    // The third filter will be a band-boost filter.
     float freq3 = FREQ_DEFAULT3;
     float bandwidth3 = BW_DEFAULT3;
-    float gain3 = GAIN_DEFAULT3;
+    float gain3 = std::fabs(GAIN_DEFAULT3); // must be positive
+
     BandBoostCutProp *bandBCProp3 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp3->omegaNought = 2.0 * M_PI * freq3;
@@ -46,10 +51,11 @@ MainApp::MainApp(QWidget *parent) :
     filters[2].type = FT_BAND_BOOST;
     filters[2].bandBCProp = bandBCProp3;
 
-    // The fourth filter will initially be at 512 Hz.
+    // The fourth filter will be a band-boost filter.
     float freq4 = FREQ_DEFAULT4;
     float bandwidth4 = BW_DEFAULT4;
-    float gain4 = GAIN_DEFAULT4;
+    float gain4 = std::fabs(GAIN_DEFAULT4); // must be positive
+
     BandBoostCutProp *bandBCProp4 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp4->omegaNought = 2.0 * M_PI * freq4;
@@ -59,32 +65,34 @@ MainApp::MainApp(QWidget *parent) :
     filters[3].type = FT_BAND_BOOST;
     filters[3].bandBCProp = bandBCProp4;
 
-    // The fifth filter will initially be at 1024 Hz.
+    // The fifth filter will be a band-boost filter.
     float freq5 = FREQ_DEFAULT5;
     float bandwidth5 = BW_DEFAULT5;
-    float gain5 = GAIN_DEFAULT5;
+    float gain5 = std::fabs(GAIN_DEFAULT5); // must be positive
+    
     BandBoostCutProp *bandBCProp5 = (BandBoostCutProp *)
         malloc(sizeof(BandBoostCutProp));
     bandBCProp5->omegaNought = 2.0 * M_PI * freq5;
     bandBCProp5->Q = freq5 / bandwidth5;
     bandBCProp5->K = std::pow(10.0, gain5 / 20.0);
-
+    
     filters[4].type = FT_BAND_BOOST;
     filters[4].bandBCProp = bandBCProp5;
-
-    // The sixth filter will initially be at 2048 Hz.
+    
+    // The sixth filter will be a high-shelving filter.
     float freq6 = FREQ_DEFAULT6;
     float bandwidth6 = BW_DEFAULT6;
-    float gain6 = GAIN_DEFAULT6;
-    BandBoostCutProp *bandBCProp6 = (BandBoostCutProp *)
-        malloc(sizeof(BandBoostCutProp));
-    bandBCProp6->omegaNought = 2.0 * M_PI * freq6;
-    bandBCProp6->Q = freq6 / bandwidth6;
-    bandBCProp6->K = std::pow(10.0, gain6 / 20.0);
+    float gain6 = GAIN_DEFAULT6; // can be negative
 
-    filters[5].type = FT_BAND_BOOST;
-    filters[5].bandBCProp = bandBCProp6;
-
+    ShelvingProp *shelvingProp6 = (ShelvingProp *)
+        malloc(sizeof(ShelvingProp));
+    shelvingProp6->omegaNought = 2.0 * M_PI * freq6;
+    shelvingProp6->omegaBW = 2.0 * M_PI * bandwidth6;
+    shelvingProp6->K = std::pow(10.0, gain6 / 20.0);
+    
+    filters[5].type = FT_HIGH_SHELF;
+    filters[5].shelvingProp = shelvingProp6;
+    
     // Construct the parametric EQ. 
     paramEQ = new ParametricEQ(NUM_FILTERS, filters);
 
@@ -94,91 +102,140 @@ MainApp::MainApp(QWidget *parent) :
     initWindow();
 }
 
+
 /**
-  * Helper function to return the correct QIcon for a
-  * request based on specific filter type.
+  * Helper function to return the correct QIcon for a request based on
+  * specific filter type.
   */
-QIcon MainApp::getImageType(int type, QString guiPath)
+QIcon MainApp::getImageType(SelectableFilterType type, QString guiPath)
 {
     QPixmap filterLogo;
-    if (type == 0)
+    
+    switch(type)
     {
-        // high sheiving
-        filterLogo = QPixmap(guiPath + "rising_big.png");
-    }
-    else if (type == 1)
-    {
-        // peak
-        filterLogo = QPixmap(guiPath + "peak_big.png");
-    }
-    else
-    {
-        // low sheiving
-        filterLogo = QPixmap(guiPath + "falling_big.png");
-    }
-    QIcon filterIcon(filterLogo);
+        case SFT_BAND:
+            filterLogo = QPixmap(guiPath + "band_big.png");
+            break;
 
+        case SFT_HIGH_SHELF:
+            filterLogo = QPixmap(guiPath + "high_shelving_big.png");
+            break;
+        
+        case SFT_LOW_SHELF:
+            filterLogo = QPixmap(guiPath + "low_shelving_big.png");
+            break;
+        
+        default:
+            throw std::invalid_argument("Unknown SelectableFilterType: " + 
+                std::to_string(type));
+    }
+
+    QIcon filterIcon(filterLogo);
+    
     return filterIcon;
 }
 
+
 /**
-  * A serious of SLOT functions to change filter logo and
-  * filterType values to store when the dropdown menu is
-  * activated.
-  */
-void MainApp::selectFilter1(int val)
+ * A helper function to handle SelectableFilterType updates, update icons,
+ * interpret the new values, and pass them on to updateFilter(). Note: SFT
+ * = SelectableFilterType.
+ */
+void MainApp::handleSFTUpdates(int filterNum, QPushButton *buttonToUpdate,
+        SelectableFilterType selFiltType)
 {
+    // Update the icon on the push-button.
     QString guiPath = QDir::currentPath().mid(
         0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
-    QIcon newFilter = getImageType(val, guiPath);
-    filterType[0] = val;
-    ui->filter1Logo->setIcon(newFilter);
+    QIcon newFilterIcon = getImageType(selFiltType, guiPath);
+    buttonToUpdate->setIcon(newFilterIcon);
+
+    // Set the new FilterType based on the gain and what the user selected.
+    // Note the distinction between FilterTypes and SelectableFilterTypes.
+    FilterType newFilterType;
+    int thisFiltGain = gain[filterNum];
+    
+    switch(selFiltType)
+    {
+        case SFT_BAND:
+            // In this case, we need to decide if this is a boost or a cut.
+            newFilterType = FT_BAND_BOOST;
+            
+            if (thisFiltGain < 0)
+            {
+                newFilterType = FT_BAND_CUT;
+            }
+            break;
+        
+        case SFT_HIGH_SHELF:
+            // High-shelving filters aren't distinguished by their gain.
+            newFilterType = FT_HIGH_SHELF;
+            break;
+        
+        case SFT_LOW_SHELF:
+            // Low-shelving filters aren't distinguished by their gain.
+            newFilterType = FT_LOW_SHELF;
+            break;
+
+        default:
+            throw std::invalid_argument("Invalid SelectableFilterType: " +
+                    std::to_string(selFiltType));
+    }
+    
+    // Update array of selectable filter types.
+    selFilterTypes[filterNum] = selFiltType;
+    
+    // Update back-end filters.
+    updateFilter(filterNum,                             /* filterNum */ 
+                 gain[filterNum],                       /* newGain */ 
+                 dialValue[filterNum],                  /* newFreq */
+                 dialValue[filterNum + NUM_FILTERS],    /* newBW */
+                 newFilterType                          /* filtType */
+                 );
+}
+
+
+/**
+ * A series of slot functions to change filter logo and filter type
+ * values, whenever the dropdown menus are activated. Note that the integer
+ * values of the QComboBox are treated as SelectableFilterTypes.
+ */
+void MainApp::selectFilter1(int val)
+{
+    handleSFTUpdates(0, ui->filter1Logo, 
+                     static_cast<SelectableFilterType>(val));
 }
 
 void MainApp::selectFilter2(int val)
 {
-    QString guiPath = QDir::currentPath().mid(
-        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
-    QIcon newFilter = getImageType(val, guiPath);
-    filterType[1] = val;
-    ui->filter2Logo->setIcon(newFilter);
+    handleSFTUpdates(1, ui->filter2Logo,
+                     static_cast<SelectableFilterType>(val));
 }
 
 void MainApp::selectFilter3(int val)
 {
-    QString guiPath = QDir::currentPath().mid(
-        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
-    QIcon newFilter = getImageType(val, guiPath);
-    filterType[2] = val;
-    ui->filter3Logo->setIcon(newFilter);
+    handleSFTUpdates(2, ui->filter3Logo,
+                     static_cast<SelectableFilterType>(val));
 }
 
 void MainApp::selectFilter4(int val)
 {
-    QString guiPath = QDir::currentPath().mid(
-        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
-    QIcon newFilter = getImageType(val, guiPath);
-    filterType[3] = val;
-    ui->filter4Logo->setIcon(newFilter);
+    handleSFTUpdates(3, ui->filter4Logo,
+                     static_cast<SelectableFilterType>(val));
 }
 
 void MainApp::selectFilter5(int val)
 {
-    QString guiPath = QDir::currentPath().mid(
-        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
-    QIcon newFilter = getImageType(val, guiPath);
-    filterType[4] = val;
-    ui->filter5Logo->setIcon(newFilter);
+    handleSFTUpdates(4, ui->filter5Logo,
+                     static_cast<SelectableFilterType>(val));
 }
 
 void MainApp::selectFilter6(int val)
 {
-    QString guiPath = QDir::currentPath().mid(
-        0, QDir::currentPath().indexOf("gpu_parametric_eq") + 17) + "/img/";
-    QIcon newFilter = getImageType(val, guiPath);
-    filterType[5] = val;
-    ui->filter6Logo->setIcon(newFilter);
+    handleSFTUpdates(5, ui->filter6Logo,
+                     static_cast<SelectableFilterType>(val));
 }
+
 
 /**
   * One of the initializing functions to set up all filters at the
@@ -186,13 +243,15 @@ void MainApp::selectFilter6(int val)
   */
 void MainApp::setupFilterLogos(QString guiPath)
 {
-    filterType[0] = DEFAULT_FILTER_TYPE1;
-    filterType[1] = DEFAULT_FILTER_TYPE2;
-    filterType[2] = DEFAULT_FILTER_TYPE3;
-    filterType[3] = DEFAULT_FILTER_TYPE4;
-    filterType[4] = DEFAULT_FILTER_TYPE5;
-    filterType[5] = DEFAULT_FILTER_TYPE6;
-
+    // Update internal array
+    selFilterTypes[0] = DEFAULT_FILTER_TYPE1;
+    selFilterTypes[1] = DEFAULT_FILTER_TYPE2;
+    selFilterTypes[2] = DEFAULT_FILTER_TYPE3;
+    selFilterTypes[3] = DEFAULT_FILTER_TYPE4;
+    selFilterTypes[4] = DEFAULT_FILTER_TYPE5;
+    selFilterTypes[5] = DEFAULT_FILTER_TYPE6;
+    
+    // Get rid of highlighted-item color changing.
     ui->comboBox->setItemDelegate (new SelectionKillerDelegate);
     ui->comboBox_2->setItemDelegate (new SelectionKillerDelegate);
     ui->comboBox_3->setItemDelegate (new SelectionKillerDelegate);
@@ -200,32 +259,76 @@ void MainApp::setupFilterLogos(QString guiPath)
     ui->comboBox_5->setItemDelegate (new SelectionKillerDelegate);
     ui->comboBox_6->setItemDelegate (new SelectionKillerDelegate);
 
-    ui->comboBox->insertItem(0, getImageType(0, guiPath), "High");
-    ui->comboBox->insertItem(1, getImageType(1, guiPath), "Band");
-    ui->comboBox->insertItem(2, getImageType(2, guiPath), "Low");
-    ui->comboBox_2->insertItem(0, getImageType(0, guiPath), "High");
-    ui->comboBox_2->insertItem(1, getImageType(1, guiPath), "Band");
-    ui->comboBox_2->insertItem(2, getImageType(2, guiPath), "Low");
-    ui->comboBox_3->insertItem(0, getImageType(0, guiPath), "High");
-    ui->comboBox_3->insertItem(1, getImageType(1, guiPath), "Band");
-    ui->comboBox_3->insertItem(2, getImageType(2, guiPath), "Low");
-    ui->comboBox_4->insertItem(0, getImageType(0, guiPath), "High");
-    ui->comboBox_4->insertItem(1, getImageType(1, guiPath), "Band");
-    ui->comboBox_4->insertItem(2, getImageType(2, guiPath), "Low");
-    ui->comboBox_5->insertItem(0, getImageType(0, guiPath), "High");
-    ui->comboBox_5->insertItem(1, getImageType(1, guiPath), "Band");
-    ui->comboBox_5->insertItem(2, getImageType(2, guiPath), "Low");
-    ui->comboBox_6->insertItem(0, getImageType(0, guiPath), "High");
-    ui->comboBox_6->insertItem(1, getImageType(1, guiPath), "Band");
-    ui->comboBox_6->insertItem(2, getImageType(2, guiPath), "Low");
+    // Add entries to each QComboBox.
+    ui->comboBox->insertItem(SFT_HIGH_SHELF, 
+                             getImageType(SFT_HIGH_SHELF, guiPath),
+                             "HiSh");
+    ui->comboBox->insertItem(SFT_BAND, 
+                             getImageType(SFT_BAND, guiPath),
+                             "Band");
+    ui->comboBox->insertItem(SFT_LOW_SHELF, 
+                             getImageType(SFT_LOW_SHELF, guiPath),
+                             "LoSh");
 
-    ui->filter1Logo->setIcon(getImageType(filterType[0], guiPath));
-    ui->filter2Logo->setIcon(getImageType(filterType[1], guiPath));
-    ui->filter3Logo->setIcon(getImageType(filterType[2], guiPath));
-    ui->filter4Logo->setIcon(getImageType(filterType[3], guiPath));
-    ui->filter5Logo->setIcon(getImageType(filterType[4], guiPath));
-    ui->filter6Logo->setIcon(getImageType(filterType[5], guiPath));
+    ui->comboBox_2->insertItem(SFT_HIGH_SHELF, 
+                               getImageType(SFT_HIGH_SHELF, guiPath),
+                               "HiSh");
+    ui->comboBox_2->insertItem(SFT_BAND, 
+                               getImageType(SFT_BAND, guiPath),
+                               "Band");
+    ui->comboBox_2->insertItem(SFT_LOW_SHELF, 
+                               getImageType(SFT_LOW_SHELF, guiPath),
+                               "LoSh");
+    
+    ui->comboBox_3->insertItem(SFT_HIGH_SHELF, 
+                               getImageType(SFT_HIGH_SHELF, guiPath),
+                               "HiSh");
+    ui->comboBox_3->insertItem(SFT_BAND, 
+                               getImageType(SFT_BAND, guiPath),
+                               "Band");
+    ui->comboBox_3->insertItem(SFT_LOW_SHELF, 
+                               getImageType(SFT_LOW_SHELF, guiPath),
+                               "LoSh");
+    
+    ui->comboBox_4->insertItem(SFT_HIGH_SHELF, 
+                               getImageType(SFT_HIGH_SHELF, guiPath),
+                               "HiSh");
+    ui->comboBox_4->insertItem(SFT_BAND, 
+                               getImageType(SFT_BAND, guiPath),
+                               "Band");
+    ui->comboBox_4->insertItem(SFT_LOW_SHELF, 
+                               getImageType(SFT_LOW_SHELF, guiPath),
+                               "LoSh");
 
+    ui->comboBox_5->insertItem(SFT_HIGH_SHELF, 
+                               getImageType(SFT_HIGH_SHELF, guiPath),
+                               "HiSh");
+    ui->comboBox_5->insertItem(SFT_BAND, 
+                               getImageType(SFT_BAND, guiPath),
+                               "Band");
+    ui->comboBox_5->insertItem(SFT_LOW_SHELF, 
+                               getImageType(SFT_LOW_SHELF, guiPath),
+                               "LoSh");
+    
+    ui->comboBox_6->insertItem(SFT_HIGH_SHELF, 
+                               getImageType(SFT_HIGH_SHELF, guiPath),
+                               "HiSh");
+    ui->comboBox_6->insertItem(SFT_BAND, 
+                               getImageType(SFT_BAND, guiPath),
+                               "Band");
+    ui->comboBox_6->insertItem(SFT_LOW_SHELF, 
+                               getImageType(SFT_LOW_SHELF, guiPath),
+                               "LoSh");
+
+    // Update logos on the QPushButtons, based on the initial filter.
+    ui->filter1Logo->setIcon(getImageType(selFilterTypes[0], guiPath));
+    ui->filter2Logo->setIcon(getImageType(selFilterTypes[1], guiPath));
+    ui->filter3Logo->setIcon(getImageType(selFilterTypes[2], guiPath));
+    ui->filter4Logo->setIcon(getImageType(selFilterTypes[3], guiPath));
+    ui->filter5Logo->setIcon(getImageType(selFilterTypes[4], guiPath));
+    ui->filter6Logo->setIcon(getImageType(selFilterTypes[5], guiPath));
+    
+    // Set up callbacks on the QPushButton being pressed.
     connect(ui->filter1Logo, SIGNAL(clicked()), this, SLOT(showDropdown1()));
     connect(ui->filter2Logo, SIGNAL(clicked()), this, SLOT(showDropdown2()));
     connect(ui->filter3Logo, SIGNAL(clicked()), this, SLOT(showDropdown3()));
@@ -233,6 +336,7 @@ void MainApp::setupFilterLogos(QString guiPath)
     connect(ui->filter5Logo, SIGNAL(clicked()), this, SLOT(showDropdown5()));
     connect(ui->filter6Logo, SIGNAL(clicked()), this, SLOT(showDropdown6()));
 
+    // Set up callbacks on the QComboBox choosing a filter.
     connect(ui->comboBox, SIGNAL(activated(int)), this, SLOT(selectFilter1(int)));
     connect(ui->comboBox_2, SIGNAL(activated(int)), this, SLOT(selectFilter2(int)));
     connect(ui->comboBox_3, SIGNAL(activated(int)), this, SLOT(selectFilter3(int)));
@@ -390,9 +494,12 @@ void MainApp::initPlot()
     ui->customPlot->yAxis->grid()->setSubGridVisible(true);
     ui->customPlot->yAxis->setAutoSubTicks(false); 
     ui->customPlot->yAxis->setSubTickCount(1);
+    ui->customPlot->yAxis->setAutoTickStep(false);
+    ui->customPlot->yAxis->setTickStep(6);  // ticks every 6 dB
+
     ui->customPlot->xAxis->grid()->setSubGridVisible(true);
-    ui->customPlot->yAxis->setAutoSubTicks(false);  
-    ui->customPlot->xAxis->setSubTickCount(4);
+    ui->customPlot->xAxis->setAutoSubTicks(false);  
+    ui->customPlot->xAxis->setSubTickCount(1);
     
     // Axis labels
     ui->customPlot->xAxis->setLabel("Frequency (Hz)");
@@ -429,12 +536,6 @@ void MainApp::updatePlot()
     QVector<double> freqs(numPts);           // Hz
     QVector<double> gainsDB(numPts);         // dB
 
-    // Keep track of the minimum and maximum gains (in dB). Initialize
-    // these to twice GAIN_MIN and GAIN_MAX respectively, so that there's
-    // some extra space in our plot in the "normal case".
-    double gainsDBMin = GAIN_MIN * 2.0;
-    double gainsDBMax = GAIN_MAX * 2.0;
-
     // For each point, take the "superposition" (i.e. multiplication) of
     // the transfer functions, and then take the absolute value to get the
     // gain.
@@ -458,9 +559,11 @@ void MainApp::updatePlot()
 
         freqs[i] = thisFreq;
 
-        // The Laplace-transform variable for this frequency.
-        std::complex<double> s(0.0, 2.0 * M_PI * thisFreq);
-
+        // The Laplace-transform variable for this frequency, both in real
+        // and purely imaginary forms.
+        float sReal = 2.0 * M_PI * thisFreq;
+        std::complex<double> s(0.0, sReal);
+        
         // The complex transfer function value at this frequency (a
         // multiplication of all the individual transfer functions).
         std::complex<double> output(1.0, 0.0);
@@ -469,9 +572,6 @@ void MainApp::updatePlot()
         {
             Filter thisFilter = filters[filtNum];
             FilterType thisFilterType = thisFilter.type;
-            
-            std::complex<double> sSq;
-            double omegaNought, Q, K, omegaNoughtOvQ, omegaNoughtSq;
             
             switch (thisFilterType)
             {
@@ -484,8 +584,12 @@ void MainApp::updatePlot()
                     //        / (s^2 + omegaNought/Q * s + omegaNought^2)
                     // 
                     // And use the reciprocal of this for cuts.
+
+                    std::complex<double> sSq;
+                    double omegaNought, Q, K, omegaNoughtOvQ, omegaNoughtSq;
                     
-                    omegaNought = (double) thisFilter.bandBCProp->omegaNought;
+                    omegaNought = (double) 
+                        thisFilter.bandBCProp->omegaNought;
                     Q = (double) thisFilter.bandBCProp->Q;
                     K = (double) thisFilter.bandBCProp->K;
                     
@@ -520,6 +624,44 @@ void MainApp::updatePlot()
 
                     break;
                 }
+
+                case FT_HIGH_SHELF:
+                case FT_LOW_SHELF:
+                {
+                    // The real-valued transfer function for low-shelf
+                    // filters is:
+                    //
+                    // H(s) = 1 + (K - 1) * 
+                    //      {1 - tanh( (|s| - Omega_0) / Omega_BW ) } / 2
+                    //
+                    // For high-shelf filters, we negate the argument to
+                    // the tanh.
+                    
+                    double tanhArg, tanhVal;
+                    double omegaNought, omegaBW, KMinus1;
+
+                    omegaNought = (double) 
+                        thisFilter.shelvingProp->omegaNought;
+                    omegaBW = (double) thisFilter.shelvingProp->omegaBW;
+                    KMinus1 = (double) thisFilter.shelvingProp->K - 1.0;
+                    
+                    // Calculate the argument to the tanh function.
+                    tanhArg = (sReal - omegaNought) / omegaBW;
+                    
+                    // Negate if this is a high-shelf filter.
+                    if (thisFilterType == FT_HIGH_SHELF)
+                    {
+                        tanhArg *= -1.0;
+                    }
+
+                    tanhVal = std::tanh(tanhArg);
+                    
+                    // Multiply the previous transfer function by this
+                    // real-valued transfer function.
+                    output *= 1.0 + KMinus1 * (1.0 - tanhVal) / 2.0;
+                    
+                    break;
+                }
                 
                 default:
                     throw std::invalid_argument("Unknown filter type: " + 
@@ -532,26 +674,22 @@ void MainApp::updatePlot()
         double thisGainDB = 20.0 * std::log10(thisGain);
         
         gainsDB[i] = thisGainDB;
-
-        gainsDBMin = std::min(thisGainDB, gainsDBMin);
-        gainsDBMax = std::max(thisGainDB, gainsDBMax);
     }
     
-    // Graph gain as a function of frequency
+    // Graph gain as a function of frequency for the overall transfer
+    // function.
     ui->customPlot->graph(0)->setData(freqs, gainsDB);
-        
-    // Set the y-axis scale based on the min and max found earlier (which
-    // might extend beyond the data in the "normal" case). Note that we
-    // always want the range to be symmetric, and we give a few dB of
-    // padding space.
-    double halfRange = std::max(std::abs(gainsDBMin),
-                                std::abs(gainsDBMax)) + 2.0;
-
-    ui->customPlot->yAxis->setRange(-halfRange, halfRange);
-    ui->customPlot->yAxis2->setRange(-halfRange, halfRange);
+    
+    // Set the y-axis so that it ranges from GAIN_MIN to GAIN_MAX. While
+    // this might cut off some filters, this is what FL Studio does, since
+    // it suggests excessive equalization to the user. Also, things will
+    // line up better with the gain sliders (visually).
+    ui->customPlot->yAxis->setRange(GAIN_MIN, GAIN_MAX);
+    ui->customPlot->yAxis2->setRange(GAIN_MIN, GAIN_MAX);
 
     ui->customPlot->replot();
 }
+
 
 /**
  * This function initializes the window and sets some of its properties.
@@ -627,6 +765,7 @@ void MainApp::initWindow()
     initDeviceMeta();
 }
 
+
 void MainApp::showDropdown1()
 {
     ui->comboBox->showPopup();
@@ -656,6 +795,7 @@ void MainApp::showDropdown6()
 {
     ui->comboBox_6->showPopup();
 }
+
 
 /**
   * This helper function retrieves the current device's properties
@@ -711,6 +851,7 @@ void MainApp::initDeviceMeta()
     ui->textBrowser->setText(metaInfo);
 }
 
+
 /**
  * This helper function sets the song properties in the appropriate
  * display box.
@@ -738,6 +879,7 @@ void MainApp::setSongProperties()
         "\n" + bitsPSample;
     ui->songBrowser->setText(songProp);
 }
+
 
 /**
  * This helper function calculates a time string from a time (which
@@ -816,7 +958,7 @@ void MainApp::setNewDuration(float newDuration)
 void MainApp::on_fileSelectButton_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(
-        this, tr("Open WAV file for test"), tr("Audio files (*.wav)"));
+        this, tr("Select a WAV file"), tr("Audio files (*.wav)"));
     
     // Check for .wav or .WAV extension
     if (filename.isEmpty() || 
@@ -920,6 +1062,13 @@ void MainApp::setGainValue(int filterNum, int val)
                 newFilterType = FT_BAND_CUT;
             }
         
+            break;
+
+        // For shelving filters, the type is unchanged (these filters
+        // account for the gain being positive or negative).
+        case FT_HIGH_SHELF:
+        case FT_LOW_SHELF:
+            newFilterType = filters[filterNum].type;
             break;
 
         default:
@@ -1165,7 +1314,7 @@ void MainApp::on_processButton_clicked()
         ui->numSampleBox->setEnabled(false);
         ui->blockNum->setEnabled(false);
 
-        cout << "Processing file: " << currDataFile.toLocal8Bit().data() 
+        cout << "\nProcessing file: " << currDataFile.toLocal8Bit().data() 
              << endl;
         
         processing = true;
@@ -1243,6 +1392,7 @@ void MainApp::on_blockNum_editingFinished()
     ui->statusBar->showMessage(msg, 5000);
 }
 
+
 /**
  * This helper function loads the current filter value and update
  * it accordingly.
@@ -1250,10 +1400,6 @@ void MainApp::on_blockNum_editingFinished()
 void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
                            float newBW, FilterType filtType)
 {
-    float freq = newFreq;                   // Hz
-    float bandwidth = newBW;                // Hz
-    float gain = std::fabs(newGain);        // dB (must be positive)    
-    
     Filter *oldFilter = &filters[filterNum];
     
     // Free the old Filter's properties
@@ -1262,6 +1408,11 @@ void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
         case FT_BAND_BOOST:
         case FT_BAND_CUT:
             free(oldFilter->bandBCProp);
+            break;
+
+        case FT_HIGH_SHELF:
+        case FT_LOW_SHELF:
+            free(oldFilter->shelvingProp);
             break;
         
         default:
@@ -1277,15 +1428,35 @@ void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
         case FT_BAND_BOOST:
         case FT_BAND_CUT:
         {
-            // Set up the new BandBoostCutProp
+            // Set up the new BandBoostCutProp. The gain used must be
+            // positive for band-boosts and band-cuts.
+            float absNewGain = std::fabs(newGain);
+            
             BandBoostCutProp *bandBCProp = (BandBoostCutProp *)
                 malloc(sizeof(BandBoostCutProp));
             
-            bandBCProp->omegaNought = 2.0 * M_PI * freq;
-            bandBCProp->Q = freq / bandwidth;
-            bandBCProp->K = std::pow(10.0, gain / 20.0);
+            bandBCProp->omegaNought = 2.0 * M_PI * newFreq;
+            bandBCProp->Q = newFreq / newBW;
+            bandBCProp->K = std::pow(10.0, absNewGain / 20.0);
     
             oldFilter->bandBCProp = bandBCProp;
+            break;
+        }
+
+        case FT_HIGH_SHELF:
+        case FT_LOW_SHELF:
+        {
+            // Set up the new ShelvingProp. Note that the gain can be
+            // negative for shelving filters.
+            ShelvingProp *shelvingProp = (ShelvingProp *)
+                malloc(sizeof(ShelvingProp));
+            
+            shelvingProp->omegaNought = 2.0 * M_PI * newFreq;
+            shelvingProp->omegaBW = 2.0 * M_PI * newBW;
+            shelvingProp->K = std::pow(10.0, newGain / 20.0);
+
+            oldFilter->shelvingProp = shelvingProp;
+
             break;
         }
 
@@ -1293,7 +1464,7 @@ void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
             throw std::invalid_argument("Invalid new filter type: " +
                     std::to_string(filtType));
     }
-
+    
     // Have the ParametricEQ signal an update.
     paramEQ->setFilters(filters);
 
@@ -1307,7 +1478,7 @@ void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
 
 /**
  * This helper function just frees the filter properties for each filter,
- * which is useful for when filters need to change.
+ * which is useful for cleaning up. 
  */
 void MainApp::freeFilterProperties()
 {
@@ -1321,6 +1492,12 @@ void MainApp::freeFilterProperties()
             case FT_BAND_CUT:
                 // Free the BandBoostCutProp.
                 free(thisFilter.bandBCProp);
+                break;
+
+            case FT_HIGH_SHELF:
+            case FT_LOW_SHELF:
+                // Free the ShelvingProp.
+                free(thisFilter.shelvingProp);
                 break;
             
             default:

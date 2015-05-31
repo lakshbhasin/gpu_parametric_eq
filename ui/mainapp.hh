@@ -32,28 +32,27 @@
 #define THREADS_PER_BLOCK 512
 #define MAX_NUM_BLOCK 200
 
-/* Default value for filters. */
-/* 0 = high, 1 = band/cut, 2 = low. */
-#define DEFAULT_FILTER_TYPE1 2
-#define DEFAULT_FILTER_TYPE2 1
-#define DEFAULT_FILTER_TYPE3 1
-#define DEFAULT_FILTER_TYPE4 1
-#define DEFAULT_FILTER_TYPE5 1
-#define DEFAULT_FILTER_TYPE6 0
+/* Initial default values for filters. */
+#define DEFAULT_FILTER_TYPE1 SFT_LOW_SHELF
+#define DEFAULT_FILTER_TYPE2 SFT_BAND
+#define DEFAULT_FILTER_TYPE3 SFT_BAND
+#define DEFAULT_FILTER_TYPE4 SFT_BAND
+#define DEFAULT_FILTER_TYPE5 SFT_BAND
+#define DEFAULT_FILTER_TYPE6 SFT_HIGH_SHELF
 
 /* Default value for Freq, BW, and gain. */
 #define FREQ_DEFAULT1 64.0
-#define FREQ_DEFAULT2 128.0
-#define FREQ_DEFAULT3 256.0
-#define FREQ_DEFAULT4 512.0
-#define FREQ_DEFAULT5 1024.0
-#define FREQ_DEFAULT6 2048.0
-#define BW_DEFAULT1 32.0
-#define BW_DEFAULT2 64.0
-#define BW_DEFAULT3 128.0
-#define BW_DEFAULT4 256.0
-#define BW_DEFAULT5 512.0
-#define BW_DEFAULT6 1024.0
+#define FREQ_DEFAULT2 160.0
+#define FREQ_DEFAULT3 410.0
+#define FREQ_DEFAULT4 680.0
+#define FREQ_DEFAULT5 1800.0
+#define FREQ_DEFAULT6 4150.0
+#define BW_DEFAULT1 24.0
+#define BW_DEFAULT2 80.0
+#define BW_DEFAULT3 180.0
+#define BW_DEFAULT4 320.0
+#define BW_DEFAULT5 700.0
+#define BW_DEFAULT6 800.0
 #define GAIN_DEFAULT1 0.0
 #define GAIN_DEFAULT2 0.0
 #define GAIN_DEFAULT3 0.0
@@ -66,13 +65,26 @@
 #define MAX_FREQ_SPACE_FACTOR   1.05
 
 
+/**
+ * Selectable filter types (via the QComboBox). Note that these are not the
+ * same as FilterTypes; these are much broader.
+ */
+typedef enum SelectableFilterType
+{
+    SFT_BAND,           /* Band boost/cut filters. */
+    SFT_HIGH_SHELF,     /* High shelving filter */
+    SFT_LOW_SHELF       /* Low shelving filter */
+} SelectableFilterType;
+
+
 namespace Ui
 {
     class MainApp;
 }
 
 
-/** This class re-definition is needed for QComboBox
+/** 
+ * This class re-definition is needed for QComboBox
   * to be redefined for our new CSS
   */
 class SelectionKillerDelegate : public QItemDelegate
@@ -210,8 +222,10 @@ private:
     // Keep track of current gain values
     int gain[NUM_FILTERS];
 
-    // Store current filter types
-    int filterType[NUM_FILTERS];
+    // Store current filter types. These are not the same as the
+    // FilterTypes used internally in parametric_eq_cuda.cu; they're more
+    // broad.
+    SelectableFilterType selFilterTypes[NUM_FILTERS];
 
     // Use to convert audio play time to string that makes sense.
     QString calculateTimeString(float timeFloat);
@@ -229,10 +243,12 @@ private:
     void initDeviceMeta();
     void setSongProperties();
     void initWindow();
-
+    
     void setupFilterLogos(QString guiPath);
-    QIcon getImageType(int type, QString guiPath);
-
+    QIcon getImageType(SelectableFilterType type, QString guiPath);
+    void handleSFTUpdates(int filterNum, QPushButton *buttonToUpdate,
+        SelectableFilterType selFiltType);
+    
     void freeFilterProperties();
 
     void initiateProcessing();
