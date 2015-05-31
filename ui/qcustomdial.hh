@@ -69,6 +69,8 @@ public:
     void setArcWidth(double px);
     double getArcWidth() const;
 
+    void setDisabled(bool disabled);
+    void setEnabled(bool enabled);
     void setFrequency(int freq);
     int getFrequency();
      

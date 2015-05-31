@@ -274,6 +274,36 @@ void QCustomDial::setArcWidth(double px)
      
     arcPen_->setWidth(arcWidth_);
 }
+
+void QCustomDial::setDisabled(bool disabled)
+{
+    QDial::setDisabled(disabled);
+    // Work-around to set the stylesheet for disabled/enabled
+    // CustomDial
+    if (disabled == true)
+    {
+        setStyleSheet("background-color: transparent;"
+                      "font-size: 10px;"
+                      "font-family: Arial;"
+                      "color: rgb(50, 50, 50);"
+                      "qproperty-arcColor: #323232;"
+                      "qproperty-arcWidth: 3;");
+    }
+    else
+    {
+        setStyleSheet("background-color: transparent;"
+                      "font-size: 10px;"
+                      "font-family: Arial;"
+                      "color: rgb(101, 120, 133);"
+                      "qproperty-arcColor: #98a0a4;"
+                      "qproperty-arcWidth: 3;");
+    }
+}
+
+void QCustomDial::setEnabled(bool enabled)
+{
+    setDisabled(!enabled);
+}
  
 double QCustomDial::getArcWidth() const
 {
