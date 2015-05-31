@@ -64,6 +64,12 @@
 #define MIN_FREQ_SPACE_FACTOR   0.95
 #define MAX_FREQ_SPACE_FACTOR   1.05
 
+/* 
+ * Used to indicate that no filter was changed by the user (not including
+ * mouse wheel scrolls or some other modes of interaction.
+ */
+#define NO_FILT_CHANGED     -1
+
 
 /**
  * Selectable filter types (via the QComboBox). Note that these are not the
@@ -123,6 +129,9 @@ private slots:
     void setNewDuration(float newDuration);
 
     void songListener();
+    
+    void userStartedMouseDragging();
+    void userStoppedMouseDragging();
 
     void sliderGain1(int value);
     void sliderGain2(int value);
@@ -176,7 +185,7 @@ private:
     // have per second.
     static constexpr int PROG_BAR_RES_PER_S = (int) (1000.0 / 
                                                      LISTENER_UPD_MS);
-
+    
     // The internal ParametricEQ to use. 
     ParametricEQ *paramEQ;
 
@@ -198,6 +207,10 @@ private:
 
     // Whether the plot has been initialized.
     bool plotInitialized = false;
+
+    // Whether the user is interacting with the GUI via the mouse and
+    // dragging, i.e. not via the scroll wheel or key events.
+    bool userInteractingMouseDragging = false;
 
     // The Qt UI to set up
     Ui::MainApp *ui;
@@ -258,7 +271,8 @@ private:
     void updateFilter(int filterNum, float newGain, float newFreq,
                       float newBW, FilterType filtType);
 
-    void updatePlot();
+    void updatePlot(int filterNum);
+
 };
 
 #endif // MAINAPP_HH

@@ -591,6 +591,9 @@ background-color: rgb(32, 32, 32);
     <property name="singleStep">
      <number>1</number>
     </property>
+    <property name="pageStep">
+     <number>1</number>
+    </property>
     <property name="value">
      <number>0</number>
     </property>
@@ -674,6 +677,9 @@ background-color: rgb(32, 32, 32);
      <number>18</number>
     </property>
     <property name="singleStep">
+     <number>1</number>
+    </property>
+    <property name="pageStep">
      <number>1</number>
     </property>
     <property name="value">
@@ -761,6 +767,9 @@ background-color: rgb(32, 32, 32);
     <property name="singleStep">
      <number>1</number>
     </property>
+    <property name="pageStep">
+     <number>1</number>
+    </property>
     <property name="value">
      <number>0</number>
     </property>
@@ -844,6 +853,9 @@ background-color: rgb(32, 32, 32);
      <number>18</number>
     </property>
     <property name="singleStep">
+     <number>1</number>
+    </property>
+    <property name="pageStep">
      <number>1</number>
     </property>
     <property name="value">
@@ -931,6 +943,9 @@ background-color: rgb(32, 32, 32);
     <property name="singleStep">
      <number>1</number>
     </property>
+    <property name="pageStep">
+     <number>1</number>
+    </property>
     <property name="value">
      <number>0</number>
     </property>
@@ -1014,6 +1029,9 @@ background-color: rgb(32, 32, 32);
      <number>18</number>
     </property>
     <property name="singleStep">
+     <number>1</number>
+    </property>
+    <property name="pageStep">
      <number>1</number>
     </property>
     <property name="value">
@@ -1768,6 +1786,9 @@ qproperty-arcWidth: 3;
       <family>Arial</family>
       <pointsize>10</pointsize>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
    </widget>
    <widget class="QSpinBox" name="numSampleBox">

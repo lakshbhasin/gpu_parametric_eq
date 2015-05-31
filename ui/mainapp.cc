@@ -381,7 +381,7 @@ void MainApp::initDials()
     initBoundDial(ui->bw_dial_5, 10);
     initBoundDial(ui->bw_dial_6, 11);
 
-    // Set connection for freq and bandwidth
+    // Set connection for freq and bandwidth changes
     connect(ui->freq_dial_1, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob1(int)));
     connect(ui->freq_dial_2, SIGNAL(valueChanged(int)), this,
@@ -406,6 +406,61 @@ void MainApp::initDials()
         SLOT(twistKnob11(int)));
     connect(ui->bw_dial_6, SIGNAL(valueChanged(int)), this,
         SLOT(twistKnob12(int)));
+
+    // Connect knob presses so we know when the user started interacting
+    // with the GUI by dragging knobs.
+    connect(ui->freq_dial_1, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->freq_dial_2, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->freq_dial_3, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->freq_dial_4, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->freq_dial_5, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->freq_dial_6, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->bw_dial_1, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->bw_dial_2, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->bw_dial_3, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->bw_dial_4, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->bw_dial_5, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->bw_dial_6, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+
+    // Connect knob releases so that we know when the user stopped
+    // interacting with the GUI after dragging knobs.
+    connect(ui->freq_dial_1, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->freq_dial_2, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->freq_dial_3, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->freq_dial_4, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->freq_dial_5, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->freq_dial_6, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->bw_dial_1, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->bw_dial_2, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->bw_dial_3, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->bw_dial_4, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->bw_dial_5, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->bw_dial_6, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+
 }
 
 void MainApp::initPlot()
@@ -441,6 +496,15 @@ void MainApp::initPlot()
     ui->customPlot->graph(0)->setChannelFillGraph(
             ui->customPlot->graph(1));
 
+    // Add another plot that shows the currently-changing filter (as the
+    // user adjusts it).
+    ui->customPlot->addGraph();
+    ui->customPlot->graph(2)->setPen(QPen(QColor(56, 164, 193)));
+    ui->customPlot->graph(2)->setBrush(QBrush(QColor(56, 164, 193, 20)));
+    ui->customPlot->graph(2)->setAntialiasedFill(false);
+    ui->customPlot->graph(2)->setChannelFillGraph(
+            ui->customPlot->graph(1));
+    
     // The color/fonts of the labels and tick labels
     QColor labelColor(101, 120, 133);
     QFont labelFont("Arial", 10);
@@ -524,18 +588,37 @@ void MainApp::initPlot()
     plotInitialized = true;
 
     // Plot the initial transfer function
-    updatePlot();
+    updatePlot(NO_FILT_CHANGED);
 }
 
-void MainApp::updatePlot()
-{
-    // Frequency and gain vectors. The frequencies will be logarithmically
-    // spaced, with the same spacing as specified in QCustomDial.
-    int numPts = QCustomDial::KNOB_MAX - QCustomDial::KNOB_MIN;
-    
-    QVector<double> freqs(numPts);           // Hz
-    QVector<double> gainsDB(numPts);         // dB
 
+/**
+ * This function is called whenever the plot needs updating. If a filter
+ * was changed by the user, its number is passed as an argument, so that we
+ * can display that filter in particular on graph(2). If no filter was
+ * changed, then filterNum is set to NO_FILT_CHANGED.
+ *
+ */
+void MainApp::updatePlot(int filterNum)
+{    
+    int numPts = QCustomDial::KNOB_MAX - QCustomDial::KNOB_MIN;
+
+    // Frequency and gain vectors for the superposition of transfer
+    // functions. The frequencies will be logarithmically spaced, with the
+    // same spacing as specified in QCustomDial.   
+    QVector<double> freqs(numPts);                      // Hz
+    QVector<double> superPositionGainsDB(numPts);       // dB
+
+    // If a filter was dragged by the user, we want to show that filter in
+    // particular. So we'll store its gains separately. Note that the
+    // frequencies are shared.
+    QVector<double> *thisFiltGainsDB = NULL;            // dB
+    
+    if (filterNum != NO_FILT_CHANGED)
+    {
+        thisFiltGainsDB = new QVector<double>(numPts);
+    }
+    
     // For each point, take the "superposition" (i.e. multiplication) of
     // the transfer functions, and then take the absolute value to get the
     // gain.
@@ -561,16 +644,20 @@ void MainApp::updatePlot()
 
         // The Laplace-transform variable for this frequency, both in real
         // and purely imaginary forms.
-        float sReal = 2.0 * M_PI * thisFreq;
+        double sReal = 2.0 * M_PI * thisFreq;
         std::complex<double> s(0.0, sReal);
         
         // The complex transfer function value at this frequency (a
         // multiplication of all the individual transfer functions).
         std::complex<double> output(1.0, 0.0);
 
-        for (int filtNum = 0; filtNum < NUM_FILTERS; filtNum ++)
+        // If filterNum isn't NO_FILT_CHANGED, we want to track the new
+        // filter's gain as a function of frequency.
+        std::complex<double> thisFiltGain = 0.0;
+        
+        for (int thisFiltNum = 0; thisFiltNum < NUM_FILTERS; thisFiltNum ++)
         {
-            Filter thisFilter = filters[filtNum];
+            Filter thisFilter = filters[thisFiltNum];
             FilterType thisFilterType = thisFilter.type;
             
             switch (thisFilterType)
@@ -619,9 +706,8 @@ void MainApp::updatePlot()
                         quot = denomBoost / numerBoost;
                     }
                     
-                    // Multiply the previous transfer function by this one.
-                    output *= quot;
-
+                    thisFiltGain = quot;
+                    
                     break;
                 }
 
@@ -656,10 +742,8 @@ void MainApp::updatePlot()
 
                     tanhVal = std::tanh(tanhArg);
                     
-                    // Multiply the previous transfer function by this
-                    // real-valued transfer function.
-                    output *= 1.0 + KMinus1 * (1.0 - tanhVal) / 2.0;
-                    
+                    thisFiltGain = 1.0 + KMinus1 * (1.0 - tanhVal) / 2.0;
+
                     break;
                 }
                 
@@ -667,19 +751,41 @@ void MainApp::updatePlot()
                     throw std::invalid_argument("Unknown filter type: " + 
                             std::to_string(thisFilterType));
             }
+            
+            // Multiply the previous transfer function by this one.
+            output *= thisFiltGain;
+
+            // If this is the filter of interest, then add its data to
+            // thisFiltGainsDB 
+            if (filterNum == thisFiltNum)
+            {
+                double thisFiltGainReal = std::abs(thisFiltGain);
+                (*thisFiltGainsDB)[i] = 20.0 * std::log10(thisFiltGainReal);
+            }
         }
 
         // Get the gain and store it in dB.
         double thisGain = std::abs(output);
         double thisGainDB = 20.0 * std::log10(thisGain);
         
-        gainsDB[i] = thisGainDB;
+        superPositionGainsDB[i] = thisGainDB;
     }
     
     // Graph gain as a function of frequency for the overall transfer
     // function.
-    ui->customPlot->graph(0)->setData(freqs, gainsDB);
-    
+    ui->customPlot->graph(0)->setData(freqs, superPositionGainsDB);
+
+    // If a filter number was specified, graph this filter's gains.
+    if (filterNum != NO_FILT_CHANGED)
+    {
+        ui->customPlot->graph(2)->setData(freqs, *thisFiltGainsDB);
+    }
+    else
+    {
+        // Otherwise, clear the old plot.
+        ui->customPlot->graph(2)->clearData();
+    }
+
     // Set the y-axis so that it ranges from GAIN_MIN to GAIN_MAX. While
     // this might cut off some filters, this is what FL Studio does, since
     // it suggests excessive equalization to the user. Also, things will
@@ -687,7 +793,36 @@ void MainApp::updatePlot()
     ui->customPlot->yAxis->setRange(GAIN_MIN, GAIN_MAX);
     ui->customPlot->yAxis2->setRange(GAIN_MIN, GAIN_MAX);
 
+    // Free this filter's gains if necessary.
+    if (filterNum != NO_FILT_CHANGED)
+    {
+        delete thisFiltGainsDB;
+    }
+
+
     ui->customPlot->replot();
+}
+
+
+/**
+ * These function handle events where the user started/stopped interacting
+ * with the knobs/sliders via mouse drags (as opposed to scrolls or keys).
+ */
+void MainApp::userStartedMouseDragging()
+{
+    // Signal to other functions that the user is currently dragging via
+    // the mouse, and so we should plot the "current filter"'s transfer
+    // function too.
+    userInteractingMouseDragging = true;
+}
+
+void MainApp::userStoppedMouseDragging()
+{
+    userInteractingMouseDragging = false;
+    
+    // Update the plot so it no longer shows the "current filter"'s
+    // transfer function in a different color.
+    updatePlot(NO_FILT_CHANGED);
 }
 
 
@@ -744,6 +879,36 @@ void MainApp::initWindow()
         this, SLOT(sliderGain5(int)));
     connect(ui->verticalSlider_6, SIGNAL(valueChanged(int)),
         this, SLOT(sliderGain6(int)));
+
+    // Connect slider presses so that we know when the user started
+    // interacting with the GUI by dragging sliders.
+    connect(ui->verticalSlider, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->verticalSlider_2, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->verticalSlider_3, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->verticalSlider_4, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->verticalSlider_5, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+    connect(ui->verticalSlider_6, SIGNAL(sliderPressed()),
+        this, SLOT(userStartedMouseDragging()));
+
+    // Connect slider releases so that we know when the user stopped
+    // interacting with the GUI after dragging sliders.
+    connect(ui->verticalSlider, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->verticalSlider_2, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->verticalSlider_3, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->verticalSlider_4, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->verticalSlider_5, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
+    connect(ui->verticalSlider_6, SIGNAL(sliderReleased()),
+        this, SLOT(userStoppedMouseDragging()));
 
     // Set default for gain
     ui->verticalSlider->setValue((int)GAIN_DEFAULT1);
@@ -1471,7 +1636,19 @@ void MainApp::updateFilter(int filterNum, float newGain, float newFreq,
     // Update the plot
     if (plotInitialized)
     {
-        updatePlot();
+        // Check if the user is currently interacting with sliders/knobs
+        // via mouse dragging. If so, we should graph this filter's
+        // transfer function too.
+        if (userInteractingMouseDragging)
+        {
+            updatePlot(filterNum);
+        }
+        else
+        {
+            // Otherwise, don't draw any extra transfer function since no
+            // filter is "selected".
+            updatePlot(NO_FILT_CHANGED);
+        }
     }
 }
 
