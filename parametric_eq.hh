@@ -191,7 +191,7 @@ private:
     // A mutex to make sure multiple threads don't try to free back-end
     // memory at the same time.
     std::mutex freeBackendMemMutex;
-    
+
     // A mutex to make sure multiple threads don't try to stop processing
     // audio at the same time.
     std::mutex stopProcessingMutex;
@@ -217,12 +217,13 @@ public:
     void setThreadsPerBlock(uint16_t tPerBlock);
     void setMaxBlocks(uint16_t maxBlocks);
 
-    // Getter functions (only used in interleaveCallback()).
+    // Getter functions.
     int16_t *getHostOutputAudioBuf();
     int16_t *getHostClippedAudioBuf();
     WavData *getSong();
     uint32_t getNumBufSamples();
     float getPlayedTime();
+    uint32_t getSamplesPlayed();
     Filter *getCurrentFilter();
     EQStream * getSoundStream();
 

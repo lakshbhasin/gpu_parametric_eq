@@ -18,10 +18,10 @@
 
 /* Boost includes */
 #include <boost/thread.hpp>
-#include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/chrono.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+
+/* SFML includes. */
+#include <SFML/Audio.hpp>
 
 /* Custom classes' includes. */
 #include "ui_mainapp.h"
@@ -81,32 +81,6 @@ typedef enum SelectableFilterType
     SFT_HIGH_SHELF,     /* High shelving filter */
     SFT_LOW_SHELF       /* Low shelving filter */
 } SelectableFilterType;
-
-/**
-  *  WAV file header exactly as needed to write out.
-  */
-struct waveFile
-{
-    // Header
-    char chunkID[4];      // should be "RIFF"
-    uint32_t fileLength;  // chunkSize = fileLength - 8
-    char typeID[4];       // should be "WAVE"
-    char subchunk1ID[4];  // should be "fmt "
-    uint32_t subchunk1Size;
-    uint16_t audioFormat;  // compression code: 0x0001 = uncompressed PCM Wave
-    uint16_t noOfChannels;
-    uint32_t fs;           // samplerate
-    uint32_t byteRate;
-    uint16_t bytesPerSample;
-    uint16_t bitsPerSample; // quantization
-    char subchunk2ID[4];    // "DATA"
-    uint32_t subchunk2Size; // subchunk2Size
-    // End of header
-
-    int16_t *data;       // pointer to (16 Bit-)data / payload
-    uint32_t dataLength; // length of data = subchunk2Size/bytesPerSample
-
-};
 
 
 namespace Ui
@@ -195,7 +169,6 @@ private slots:
 
 private:
 
-    std::vector<int16_t> lastProcessedSamples;
     // The minimum and maximum gains per filter.
     static constexpr float GAIN_MIN = -18.0;        // must be negative!
     static constexpr float GAIN_MAX = 18.0;
@@ -230,6 +203,11 @@ private:
     // The total duration of the song being played, in seconds.
     float duration;
 
+    // A SoundBuffer containing the most recently processed set of samples.
+    // This is updated whenever the user presses the stop button, or when a
+    // song finishes.
+    sf::SoundBuffer *lastProcessedSampBuf = NULL;
+    
     // Whether audio is currently being processed.
     bool processing = false;
 

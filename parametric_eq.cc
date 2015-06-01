@@ -396,6 +396,13 @@ float ParametricEQ::getPlayedTime()
     return (float) samplesPlayed / song->samplingRate;
 }
 
+
+uint32_t ParametricEQ::getSamplesPlayed()
+{
+    return samplesPlayed;
+}
+
+
 /**
  * A callback function that gets signalled whenever a channel's data has
  * bene processed. That channel's data will be moved from
@@ -805,8 +812,9 @@ void ParametricEQ::playAudio(const boost::system::error_code &e,
  * and device sides), and then starts off a timer that calls 
  * processAudio().
  *
- * Note that this function cleans up after itself, and calls
- * stopProcessingSound() afterwards.
+ * Note that this function does NOT call stopProcessingSound() afterwards,
+ * and hence doesn't clean up after itself. It is assumed that the caller
+ * will clean up after the ParametricEQ when it's done with it.
  *
  */
 void ParametricEQ::startProcessingSound()
@@ -816,7 +824,7 @@ void ParametricEQ::startProcessingSound()
         throw std::logic_error("Song was not initialized before "
                 "startProcessingSound() was called.");
     }
-    
+
     /* Host storage */
     
     // If numBufSamples exceeds the total number of samples per channel,
@@ -960,9 +968,9 @@ void ParametricEQ::startProcessingSound()
 #ifndef NDEBUG
     cout << "EQStream finished playing." << endl;
 #endif
-
-    /* Clean up. */
-    stopProcessingSound();
+    
+    // Assume that another piece of code will stop the processing, so we
+    // won't do anything for now.
 }
 
 

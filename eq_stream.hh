@@ -41,9 +41,6 @@ private:
     // addBufferData().
     uint64_t currentSample;
     
-    // The number of samples played so far.
-    uint64_t samplesPlayed;
-    
     // A mutex to prevent concurrent access to "processedSamples".
     std::mutex processedSamplesMutex;
 
@@ -65,6 +62,9 @@ public:
     // we've encountered so far. We'll add on to this array as we process
     // more data.
     std::vector<int16_t> processedSamples;
+
+    // The number of samples played so far.
+    uint64_t samplesPlayed;
 
     ~EQStream();
     

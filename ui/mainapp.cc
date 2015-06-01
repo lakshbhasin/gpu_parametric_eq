@@ -1124,8 +1124,6 @@ void MainApp::setNewDuration(float newDuration)
  */
 void MainApp::on_fileSelectButton_clicked()
 {
-    lastProcessedSamples.clear();
-    ui->saveButton->setEnabled(false);
     QString filename = QFileDialog::getOpenFileName(
         this, tr("Select a WAV file"), tr("Audio files (*.wav)"));
     
@@ -1145,6 +1143,16 @@ void MainApp::on_fileSelectButton_clicked()
     }
     else
     {
+        // Clear the previously processed set of samples and disable
+        // saving (we haven't recorded anything).
+        if (lastProcessedSampBuf != NULL)
+        {
+            delete lastProcessedSampBuf;
+            lastProcessedSampBuf = NULL;
+        }
+        
+        ui->saveButton->setEnabled(false);
+
         ui->textEdit->setText(filename);
         currDataFile = filename;
         char* charDataPath  = currDataFile.toLocal8Bit().data();
@@ -1166,7 +1174,7 @@ void MainApp::on_fileSelectButton_clicked()
 
 
 /**
- * This function responds to the "Browse" button being pressed.
+ * This function responds to the "Save" button being pressed.
  */
 void MainApp::on_saveButton_clicked()
 {
@@ -1391,12 +1399,42 @@ void MainApp::twistKnob12(int value)
 
 
 /**
- * This helper function is called when we want to stop processing. It does
+ * This helper function is called when we want to stop processing. It
+ * cleans up the GUI and any internals, and then calls
+ * stopProcessingSound() on the ParametricEQ.
+ *
+ * It does
  * everything except for actually call stopProcessingSound() on the
  * ParametricEQ (this must be done elsewhere).
  */
 void MainApp::handleStopProcessing()
 {
+    // If we were processing and we stop, then we store the current
+    // output data, so we can save it to audio file if needed.
+    
+    // First, clear the current buffer (if it hasn't already been cleared).
+    if (lastProcessedSampBuf != NULL)
+    {
+        delete lastProcessedSampBuf;
+        lastProcessedSampBuf = NULL;
+    }
+    
+    // Load the data in the ParametricEQ's "processedSamples". 
+    lastProcessedSampBuf = new sf::SoundBuffer;
+    lastProcessedSampBuf->loadFromSamples(
+            paramEQ->getSoundStream()->processedSamples.data(),
+            paramEQ->getSamplesPlayed() * paramEQ->getSong()->numChannels,
+            paramEQ->getSong()->numChannels,
+            paramEQ->getSong()->samplingRate);
+    
+    cout << "Duration played: " << 
+        lastProcessedSampBuf->getDuration().asSeconds() << 
+        " seconds." << endl;
+
+    // Stop processing on the ParametricEQ. This will also make the
+    // "processing thread" stop, if it hasn't already.
+    paramEQ->stopProcessingSound();
+    
     // Clean up after the processing thread.
     if (processingThread != NULL)
     {
@@ -1413,12 +1451,13 @@ void MainApp::handleStopProcessing()
         songUpdatesTimer = NULL;
     }
 
-    // Clean up the GUI
+    // Clean up the GUI and enable the save button.
     ui->processButton->setText("Process");
     ui->fileSelectButton->setEnabled(true);
     ui->threadsBlockBox->setEnabled(true);
     ui->numSampleBox->setEnabled(true);
-    ui->blockNum->setEnabled(true);
+    ui->blockNum->setEnabled(true); 
+    ui->saveButton->setEnabled(true);
 
     processing = false;
 }
@@ -1489,22 +1528,6 @@ void MainApp::on_processButton_clicked()
 
     if (processing)
     {
-        // If we were processing and we stop, then we store the
-        // current output data because destroy so we can save it
-        // to audio file if needed.
-        lastProcessedSamples.clear();
-        for (unsigned k = 0;
-            k < paramEQ->getSoundStream()->processedSamples.size(); k++)
-        {
-            lastProcessedSamples.push_back(
-                paramEQ->getSoundStream()->processedSamples[k]);
-        }
-
-        ui->saveButton->setEnabled(true);
-
-        // Stop processing.
-        paramEQ->stopProcessingSound();
-
         cout << "Stopped processing file: " << 
             currDataFile.toLocal8Bit().data() << endl;
         
@@ -1521,6 +1544,9 @@ void MainApp::on_processButton_clicked()
         ui->threadsBlockBox->setEnabled(false);
         ui->numSampleBox->setEnabled(false);
         ui->blockNum->setEnabled(false);
+
+        // Disable saving.
+        ui->saveButton->setEnabled(false);
 
         cout << "\nProcessing file: " << currDataFile.toLocal8Bit().data() 
              << endl;
@@ -1733,60 +1759,27 @@ void MainApp::freeFilterProperties()
   */
 void MainApp::saveAudio(QString filename)
 {
-    char * path = filename.toLocal8Bit().data();
-    struct waveFile WAV;
-    struct waveFile *ptrWav; // pointer to struct
-    ptrWav = &WAV;
-    // collect header info
-    ptrWav->chunkID[0] = 'R';
-    ptrWav->chunkID[1] = 'I';
-    ptrWav->chunkID[2] = 'F';
-    ptrWav->chunkID[3] = 'F';
+    std::string path = filename.toUtf8().constData();
 
-    ptrWav->fileLength = lastProcessedSamples.size() *
-        sizeof(int16_t) * (int)(paramEQ->getSong()->bitsPerSample / 8) +
-        36; // 44 byte header + data - 8
-    ptrWav->typeID[0] = 'W';
-    ptrWav->typeID[1] = 'A';
-    ptrWav->typeID[2] = 'V';
-    ptrWav->typeID[3] = 'E';
-    ptrWav->subchunk1ID[0] = 'f';
-    ptrWav->subchunk1ID[1] = 'm';
-    ptrWav->subchunk1ID[2] = 't';
-    ptrWav->subchunk1ID[3] = ' ';
-
-    ptrWav->subchunk1Size = 16;
-    ptrWav->audioFormat = 1;
-    ptrWav->noOfChannels = paramEQ->getSong()->numChannels;
-    ptrWav->fs = paramEQ->getSong()->samplingRate;
-    ptrWav->bitsPerSample = paramEQ->getSong()->bitsPerSample;
-    ptrWav->bytesPerSample = (int)(ptrWav->bitsPerSample / 8);
-    ptrWav->byteRate = ptrWav->fs *
-        ptrWav->noOfChannels * ptrWav->bytesPerSample;
-
-    ptrWav->subchunk2ID[0] = 'd';
-    ptrWav->subchunk2ID[1] = 'a';
-    ptrWav->subchunk2ID[2] = 't';
-    ptrWav->subchunk2ID[3] = 'a';
-    ptrWav->subchunk2Size = lastProcessedSamples.size() *
-        sizeof(uint16_t) * ptrWav->bytesPerSample;
-
-    // Write to file
-    FILE *fid;
-    fid = fopen(path, "w");
-    // Write simple 44 byte header to file
-    fwrite(ptrWav->chunkID, 1, 44, fid);
-    // Write data to file
-    fwrite(&lastProcessedSamples[0], ptrWav->bytesPerSample,
-        lastProcessedSamples.size() * sizeof(int16_t), fid);
-
-    fclose(fid);
+    // Just save the data in the SFML buffer, if it's not NULL. 
+    if (lastProcessedSampBuf != NULL)
+    {
+        lastProcessedSampBuf->saveToFile(path);	
+    }
+    else
+    {
+        QMessageBox::information(this, tr("No Processed Data"),
+                "There was no processed data to save.");
+    }
 }
 
 /** Destructor **/
 MainApp::~MainApp()
 {
     freeFilterProperties(); 
+
+    delete lastProcessedSampBuf;
+    lastProcessedSampBuf = NULL;
 
     delete paramEQ;
     paramEQ = NULL;

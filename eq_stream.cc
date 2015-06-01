@@ -11,8 +11,8 @@ EQStream::EQStream(uint32_t samplingRate, uint16_t numChannels,
                    uint32_t numBufSampPerChannel, uint64_t totalNumSamples) :
     samplingRate(samplingRate), numChannels(numChannels),
     numBufSampPerChannel(numBufSampPerChannel), 
-    processedSamples(totalNumSamples, 0),
-    currentSample(0), samplesPlayed(0), signalToStop(false)
+    currentSample(0), signalToStop(false), 
+    processedSamples(totalNumSamples, 0), samplesPlayed(0)
 {
     // Initialize the base class.
     initialize(numChannels, samplingRate);
