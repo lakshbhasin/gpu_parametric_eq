@@ -5,6 +5,12 @@ GPU Parametric Equalizer (GPUEQ): A CS 179 Project by Laksh Bhasin and Sharon Ya
 
 Overview
 ====
+
+<a href="https://www.youtube.com/watch?v=NSv1J9dPn40" target="_blank">
+<img src="https://github.com/lakshbhasin/gpu_parametric_eq/blob/master/img/demo.png" 
+alt="Click for a demostration video on Youtube"/></a>
+[Click the screenshot for a demostration video]
+
 For more information about the application, please visit: http://gpueq.blogspot.com/
 
 
