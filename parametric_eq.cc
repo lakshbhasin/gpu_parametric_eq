@@ -490,11 +490,18 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
                                              numBufSamples);
 
         // Check that the previous processing run is complete, for each
-        // channel.
+        // channel. Also, free the previous cuFFT plans.
         uint16_t numChannels = song->numChannels;
         for (int i = 0; i < numChannels; i++)
         {
             gpuErrChk( cudaEventSynchronize(finishedInterleaving[i]) );
+            
+            // Plans should be done now.
+            if (doneWithFirstProcessCall)
+            {
+                gpuFFTChk( cufftDestroy(forwardPlans[i]) ); 
+                gpuFFTChk( cufftDestroy(inversePlans[i]) );
+            }
         }
 
         // Check if the transfer function changed. If so, we need to copy
@@ -559,12 +566,9 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
             // Schedule the forward R->C FFT on this channel's data. Store
             // the result in the corresponding location in
             // devFFTAudioBuf.
-            
             gpuFFTChk( cufftExecR2C(forwardPlans[ch],
                                 &devInputAudioBuf[ch * numBufSamples],
-                                &devFFTAudioBuf[ch * numEntriesPerFFT]) );
-            
-            gpuFFTChk( cufftDestroy(forwardPlans[ch]) );
+                                &devFFTAudioBuf[ch * numEntriesPerFFT]) ); 
 
             // Process this channel's buffer. This involves pointwise
             // multiplication by the transfer function, as well as dividing
@@ -589,8 +593,6 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
             gpuFFTChk( cufftExecC2R(inversePlans[ch],
                             &devFFTAudioBuf[ch * numEntriesPerFFT],
                             &devUnclippedAudioBuf[ch * numBufSamples]));
-
-            gpuFFTChk( cufftDestroy(inversePlans[ch]) );
 
             // Carry out clipping on this channel's output buffer, and
             // store the clipped result in the appropriate location in
@@ -1193,12 +1195,30 @@ void ParametricEQ::freeAllBackendMemory()
     // Free cuFFT plans.
     if (forwardPlans != NULL)
     {
+        // Destroy the plans first.
+        for (int i = 0; i < song->numChannels; i++)
+        {
+            if (doneWithFirstProcessCall)
+            {
+                gpuFFTChk( cufftDestroy(forwardPlans[i]) ); 
+            }
+        }
+
         free(forwardPlans);
         forwardPlans = NULL;
     }
 
     if (inversePlans != NULL)
     {
+        // Destroy the plans first.
+        for (int i = 0; i < song->numChannels; i++)
+        {
+            if (doneWithFirstProcessCall)
+            {
+                gpuFFTChk( cufftDestroy(inversePlans[i]) ); 
+            }
+        }
+
         free(inversePlans);
         inversePlans = NULL;
     }
