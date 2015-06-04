@@ -490,17 +490,38 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
                                              numBufSamples);
 
         // Check that the previous processing run is complete, for each
-        // channel. Also, free the previous cuFFT plans.
+        // channel. Also, set up new cufft plans if necessary (and free the
+        // old ones too).
+
         uint16_t numChannels = song->numChannels;
         for (int i = 0; i < numChannels; i++)
         {
             gpuErrChk( cudaEventSynchronize(finishedInterleaving[i]) );
             
-            // Plans should be done now.
-            if (doneWithFirstProcessCall)
+            // We only need to set up new cufft plans if (1) this is the
+            // first processing iteration (and plans haven't previously
+            // been created), or (2) if the number of samples to process
+            // has changed (i.e. it doesn't equal numBufSamples anymore,
+            // since we're at the end of the song). Otherwise, we can just
+            // reuse plans, since their sizes aren't changing.
+            //
+            // Reasoning: cufftPlan1d is slow, so we want to avoid
+            // executing it as much as possible.
+            if (!doneWithFirstProcessCall ||
+                samplesToProcess != numBufSamples)
             {
-                gpuFFTChk( cufftDestroy(forwardPlans[i]) ); 
-                gpuFFTChk( cufftDestroy(inversePlans[i]) );
+                // Destroy old plans if there were any.
+                if (doneWithFirstProcessCall)
+                {
+                    gpuFFTChk( cufftDestroy(forwardPlans[i]) ); 
+                    gpuFFTChk( cufftDestroy(inversePlans[i]) );
+                }
+                
+                // Set up new forward nad inverse plans.
+                gpuFFTChk( cufftPlan1d(&forwardPlans[i], samplesToProcess,
+                                   CUFFT_R2C, 1) );
+                gpuFFTChk( cufftPlan1d(&inversePlans[i], samplesToProcess,
+                                   CUFFT_C2R, 1) );
             }
         }
 
@@ -559,8 +580,6 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
 
             // Set up the forward R->C FFT on this channel's data in
             // devInputAudioBuf. The number of points is samplesToProcess.
-            gpuFFTChk( cufftPlan1d(&forwardPlans[ch], samplesToProcess,
-                                   CUFFT_R2C, 1) );
             gpuFFTChk( cufftSetStream(forwardPlans[ch], streams[ch]) );
 
             // Schedule the forward R->C FFT on this channel's data. Store
@@ -584,8 +603,6 @@ void ParametricEQ::processAudio(const boost::system::error_code &e,
             checkCUDAKernelError();
             
             // Set up an inverse C->R FFT on this channel's data. 
-            gpuFFTChk( cufftPlan1d(&inversePlans[ch], samplesToProcess,
-                                   CUFFT_C2R, 1) );
             gpuFFTChk( cufftSetStream(inversePlans[ch], streams[ch]) );
 
             // Schedule the inverse C->R FFT. Store the result in the
